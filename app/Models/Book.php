@@ -9,6 +9,8 @@ class Book extends Model
 {
     use HasFactory;
     
+    protected $guarded = [];
+    
     public function authors()
     {
         return $this->belongsToMany(Author::class, 'book_author');
@@ -17,5 +19,15 @@ class Book extends Model
     public function genres()
     {
         return $this->belongsToMany(Genre::class, 'book_genre');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }
