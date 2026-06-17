@@ -4,13 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Rating extends Model
+class Review extends Model
 {
     protected $guarded = [];
-
-    protected $casts = [
-        'stars' => 'integer',
-    ];
 
     public function user()
     {
@@ -20,5 +16,15 @@ class Rating extends Model
     public function book()
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ReviewComment::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(ReviewLike::class);
     }
 }

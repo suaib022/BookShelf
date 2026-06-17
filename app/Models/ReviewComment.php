@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Shelf extends Model
+class ReviewComment extends Model
 {
     protected $guarded = [];
 
@@ -12,9 +12,9 @@ class Shelf extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
-    public function shelfBooks()
+
+    public function review()
     {
-        return $this->hasMany(ShelfBook::class);
+        return $this->belongsTo(Review::class);
     }
 }
