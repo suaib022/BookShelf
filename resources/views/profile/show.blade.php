@@ -1,0 +1,166 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-[1060px] mx-auto px-6 py-8">
+    <div class="flex flex-col md:flex-row gap-8 items-start">
+        
+        <!-- Left column -->
+        <aside class="w-full md:w-[260px] shrink-0">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-[160px] h-[160px] rounded-full overflow-hidden border-4 border-white shadow-md mb-4">
+                    @if($user->avatar_url)
+                        <img src="{{ Storage::url($user->avatar_url) }}" alt="{{ $user->username }}" class="w-full h-full object-cover" />
+                    @else
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-4xl">
+                            {{ substr($user->username, 0, 1) }}
+                        </div>
+                    @endif
+                </div>
+                <div class="space-y-1.5">
+                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
+                        {{ $stats['ratings'] }} ratings ({{ number_format($stats['avgRating'], 1) }} avg)
+                    </a>
+                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
+                        {{ $stats['reviews'] }} reviews
+                    </a>
+                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
+                        {{ $stats['followers'] }} followers &middot; {{ $stats['following'] }} following
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right column -->
+        <div class="flex-1 min-w-0 w-full">
+            <!-- Profile Header -->
+            <div class="mb-5">
+                <div class="flex items-baseline gap-3 flex-wrap mb-3">
+                    <h1 class="text-3xl font-bold text-[#382110] leading-tight">{{ $user->name }}</h1>
+                    @if($isOwnProfile)
+                        <a href="{{ route('profile.edit') }}" class="text-sm text-[#00635D] hover:underline font-medium transition-colors">
+                            (edit profile)
+                        </a>
+                    @elseif(auth()->check())
+                        @if($isFollowing)
+                            <form action="{{ route('users.unfollow', $user) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-4 py-1.5 rounded text-sm font-semibold border border-[#C8C0B0] text-[#555] hover:border-[#999] hover:text-[#333] transition-colors">
+                                    Following
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('users.follow', $user) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="px-4 py-1.5 rounded text-sm font-semibold bg-[#5C7A3E] hover:opacity-90 text-white transition-opacity">
+                                    Follow
+                                </button>
+                            </form>
+                        @endif
+                    @endif
+                </div>
+                <div class="space-y-1">
+                    @if($user->location)
+                    <div class="flex items-baseline gap-4">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-[#888] w-20">Location</span>
+                        <span class="text-sm text-[#444]">{{ $user->location }}</span>
+                    </div>
+                    @endif
+                    <div class="flex items-baseline gap-4">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-[#888] w-20">Joined</span>
+                        <span class="text-sm text-[#444]">{{ $user->created_at->format('M Y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shelves Row -->
+            <div class="bg-white border border-[#DDD8CC] rounded-md p-4 mb-5">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3 flex items-center justify-between">
+                    Shelves
+                    <a href="#" class="text-xs text-[#00635D] hover:underline font-medium flex items-center gap-0.5 normal-case tracking-normal">
+                        See all <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </h3>
+                <div class="flex flex-wrap gap-x-5 gap-y-1">
+                    <a href="#" class="text-sm text-[#00635D] hover:underline font-medium">Want to Read ({{ $shelfCounts['wantToRead'] }})</a>
+                    <a href="#" class="text-sm text-[#00635D] hover:underline font-medium">Currently Reading ({{ $shelfCounts['currentlyReading'] }})</a>
+                    <a href="#" class="text-sm text-[#00635D] hover:underline font-medium">Read ({{ $shelfCounts['read'] }})</a>
+                </div>
+            </div>
+
+            <!-- Review List -->
+            <div class="bg-white border border-[#DDD8CC] rounded-md p-4 mb-5">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Recent Reviews</h3>
+                @if($reviews->isEmpty())
+                    <p class="text-sm text-[#999]">No reviews yet.</p>
+                @else
+                    <div class="space-y-4">
+                        @foreach($reviews as $index => $review)
+                            @if($index > 0)
+                                <hr class="border-[#EDE9E0] mb-4" />
+                            @endif
+                            <div class="flex gap-3">
+                                <img src="{{ $review->book->cover_url ? Storage::url($review->book->cover_url) : 'https://placehold.co/48x72?text=No+Cover' }}" alt="{{ $review->book->title }}" class="w-12 h-[72px] rounded shadow-sm shrink-0 object-cover">
+                                <div class="flex-1 min-w-0">
+                                    <a href="{{ route('books.show', $review->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $review->book->title }}</a>
+                                    <p class="text-xs text-[#888] mb-1.5">by {{ $review->book->authors->first()->name ?? 'Unknown' }}</p>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="flex items-center gap-0.5">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <svg class="w-3 h-3 {{ $i <= $review->rating ? 'fill-[#F5A623] text-[#F5A623]' : 'text-[#D8D2C8]' }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-[#555] leading-relaxed line-clamp-3">{{ $review->body }}</p>
+                                    <p class="text-xs text-[#AAA] mt-1.5 italic">{{ $review->created_at->format('M j, Y') }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <!-- Bottom panels -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Genre Panel -->
+                <div class="bg-white border border-[#DDD8CC] rounded-md p-4 mb-4">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Favorite Genres</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @forelse($favoriteGenres as $genre)
+                            <a href="#" class="px-2.5 py-1 rounded-full border border-[#C8C0B0] text-xs text-[#555] hover:border-[#00635D] hover:text-[#00635D] transition-colors">
+                                {{ $genre }}
+                            </a>
+                        @empty
+                            <p class="text-xs text-[#999]">No favorite genres set.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Followers Panel -->
+                <div class="bg-white border border-[#DDD8CC] rounded-md p-4">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Followers</h3>
+                    <div class="flex gap-2 mb-3 flex-wrap">
+                        @forelse($followers as $follower)
+                            <a href="{{ route('profile.show', $follower->username) }}" class="shrink-0" title="{{ $follower->username }}">
+                                @if($follower->avatar_url)
+                                    <img src="{{ Storage::url($follower->avatar_url) }}" alt="{{ $follower->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm hover:border-[#00635D] transition-colors" />
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-sm hover:border-[#00635D] transition-colors flex items-center justify-center text-gray-500 font-bold text-sm">
+                                        {{ substr($follower->username, 0, 1) }}
+                                    </div>
+                                @endif
+                            </a>
+                        @empty
+                            <p class="text-xs text-[#999]">No followers yet.</p>
+                        @endforelse
+                    </div>
+                    @if($followers->count() > 0)
+                        <a href="#" class="text-sm text-[#00635D] hover:underline font-medium">See all followers &raquo;</a>
+                    @endif
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endsection

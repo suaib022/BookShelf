@@ -67,4 +67,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followee_id');
     }
+
+    public function favoriteGenres()
+    {
+        return $this->belongsToMany(Genre::class, 'user_favorite_genres', 'user_id', 'genre_id');
+    }
 }

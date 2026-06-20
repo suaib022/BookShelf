@@ -12,4 +12,9 @@ class Genre extends Model
     {
         return $this->belongsToMany(Book::class, 'book_genre');
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_favorite_genres', 'genre_id', 'user_id');
+    }
 }

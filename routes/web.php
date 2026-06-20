@@ -23,9 +23,11 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\UserProfileController;
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/users/{username}', [UserProfileController::class, 'show'])->name('profile.show');
 
 Route::resource('books', BookController::class);
 Route::resource('shelves', ShelfController::class);
@@ -41,7 +43,17 @@ Route::delete('/reviews/{review}/unlike', [ReviewLikeController::class, 'destroy
 Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
 Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');
 
+use App\Http\Controllers\ProfileController;
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('books', AdminBookController::class);
     Route::resource('users', AdminUserController::class);
 });
+
+require __DIR__.'/auth.php';
