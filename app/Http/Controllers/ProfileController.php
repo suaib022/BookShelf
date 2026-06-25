@@ -51,12 +51,17 @@ class ProfileController extends Controller
                 'avatar' => ['image', 'max:2048']
             ]);
             
-            if ($user->avatar_url) {
+            if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
                 Storage::disk('public')->delete($user->avatar_url);
             }
             
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar_url = $path;
+            try {
+                $imgbbService = new \App\Services\ImgbbService();
+                $url = $imgbbService->uploadImage($request->file('avatar'));
+                $user->avatar_url = $url;
+            } catch (\Exception $e) {
+                return Redirect::back()->withErrors(['avatar' => 'Failed to upload image: ' . $e->getMessage()]);
+            }
         }
 
         $user->save();
