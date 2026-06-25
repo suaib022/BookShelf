@@ -126,6 +126,26 @@
                               <a href="{{ route('profile.show', auth()->user()->username) }}" class="block px-4 py-2 text-sm text-[#333] hover:bg-[#F4F1EA] hover:text-[#00635D] transition-colors">
                                   Profile
                               </a>
+                              @if(auth()->user()->role === 'admin')
+                                  @if(auth()->user()->isActiveAdmin())
+                                      <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-[#333] hover:bg-[#F4F1EA] hover:text-[#00635D] transition-colors">
+                                          Admin Dashboard
+                                      </a>
+                                      <form method="POST" action="{{ route('toggle-mode') }}">
+                                          @csrf
+                                          <button type="submit" class="w-full text-left block px-4 py-2 text-sm font-semibold text-[#00635D] hover:bg-[#F4F1EA] transition-colors">
+                                              Switch to User Mode
+                                          </button>
+                                      </form>
+                                  @else
+                                      <form method="POST" action="{{ route('toggle-mode') }}">
+                                          @csrf
+                                          <button type="submit" class="w-full text-left block px-4 py-2 text-sm font-semibold text-[#00635D] hover:bg-[#F4F1EA] transition-colors">
+                                              Switch to Admin Mode
+                                          </button>
+                                      </form>
+                                  @endif
+                              @endif
                               <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-[#333] hover:bg-[#F4F1EA] hover:text-[#00635D] transition-colors">
                                   Account Settings
                               </a>

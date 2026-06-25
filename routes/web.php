@@ -30,18 +30,24 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/users/{username}', [UserProfileController::class, 'show'])->name('profile.show');
 
 Route::resource('books', BookController::class);
-Route::resource('shelves', ShelfController::class);
-Route::resource('ratings', RatingController::class);
-Route::resource('reviews', ReviewController::class);
+Route::middleware(['auth', 'active_user'])->group(function () {
+    Route::resource('shelves', ShelfController::class)->except(['index', 'show']);
+    Route::resource('ratings', RatingController::class)->except(['index', 'show']);
+    Route::resource('reviews', ReviewController::class)->except(['index', 'show']);
 
-Route::post('/reviews/{review}/comments', [ReviewCommentController::class, 'store'])->name('reviews.comments.store');
-Route::delete('/reviews/comments/{comment}', [ReviewCommentController::class, 'destroy'])->name('reviews.comments.destroy');
+    Route::post('/reviews/{review}/comments', [ReviewCommentController::class, 'store'])->name('reviews.comments.store');
+    Route::delete('/reviews/comments/{comment}', [ReviewCommentController::class, 'destroy'])->name('reviews.comments.destroy');
 
-Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'store'])->name('reviews.like');
-Route::delete('/reviews/{review}/unlike', [ReviewLikeController::class, 'destroy'])->name('reviews.unlike');
+    Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'store'])->name('reviews.like');
+    Route::delete('/reviews/{review}/unlike', [ReviewLikeController::class, 'destroy'])->name('reviews.unlike');
 
-Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
-Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');
+    Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
+    Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');
+});
+
+Route::resource('shelves', ShelfController::class)->only(['index', 'show']);
+Route::resource('ratings', RatingController::class)->only(['index', 'show']);
+Route::resource('reviews', ReviewController::class)->only(['index', 'show']);
 
 use App\Http\Controllers\ProfileController;
 
@@ -49,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/toggle-mode', [\App\Http\Controllers\ModeToggleController::class, 'toggle'])->name('toggle-mode');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

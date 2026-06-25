@@ -12,7 +12,8 @@ class BookController extends Controller
      */
     public function index()
     {
-        //
+        $books = \App\Models\Book::with('authors')->latest()->paginate(15);
+        return view('admin.books.index', compact('books'));
     }
 
     /**

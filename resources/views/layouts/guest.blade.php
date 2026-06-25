@@ -16,8 +16,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased bg-white">
-        <div class="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-            <div class="w-full max-w-[400px]">
+        <div class="min-h-screen bg-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="w-full max-w-sm space-y-8">
                 @yield('content')
                 
                 @if(isset($slot))

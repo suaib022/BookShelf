@@ -72,4 +72,15 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Genre::class, 'user_favorite_genres', 'user_id', 'genre_id');
     }
+
+    public function isActiveAdmin()
+    {
+        return $this->role === 'admin' && $this->active_mode === 'admin';
+    }
+
+    public function isActiveUser()
+    {
+        // If they are a regular user, or if they are an admin currently in user mode
+        return $this->role === 'user' || $this->active_mode === 'user';
+    }
 }
