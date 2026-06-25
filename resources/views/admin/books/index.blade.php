@@ -38,7 +38,7 @@
                 @forelse($books as $book)
                     <tr class="hover:bg-[#F4F1EA] transition-colors">
                         <td class="px-6 py-4">
-                            <img src="{{ $book->cover_url ? Storage::url($book->cover_url) : 'https://placehold.co/32x48?text=No+Cover' }}" alt="{{ $book->title }}" class="w-8 h-12 object-cover rounded shadow-sm">
+                            <img src="{{ $book->cover_url ? (str_starts_with($book->cover_url, 'http') ? $book->cover_url : Storage::url($book->cover_url)) : 'https://placehold.co/32x48?text=No+Cover' }}" alt="{{ $book->title }}" class="w-8 h-12 object-cover rounded shadow-sm">
                         </td>
                         <td class="px-6 py-4 font-bold text-[#382110] text-sm">
                             {{ $book->title }}
@@ -51,7 +51,7 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <a href="{{ route('admin.books.edit', $book) }}" class="inline-block px-3 py-1 text-xs font-semibold text-[#00635D] border border-[#00635D] rounded hover:bg-[#00635D] hover:text-white transition-colors mr-2">Edit</a>
-                            <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this book?');">
+                            <form action="{{ route('admin.books.destroy', $book) }}" method="POST" class="inline-block" onsubmit="confirmDelete(event, this);">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-3 py-1 text-xs font-semibold text-red-600 border border-red-600 rounded hover:bg-red-600 hover:text-white transition-colors">Delete</button>
@@ -75,4 +75,37 @@
         </div>
     @endif
 </div>
+
+<!-- Custom Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-40">
+    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 mx-4">
+        <h3 class="text-lg font-bold text-[#382110] mb-2">Confirm Deletion</h3>
+        <p class="text-sm text-[#555] mb-6">Are you sure you want to delete this book? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()" type="button" class="px-4 py-2 text-sm font-semibold text-[#555] bg-gray-200 rounded hover:bg-gray-300 transition-colors">Cancel</button>
+            <button id="confirmDeleteBtn" type="button" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded hover:bg-red-700 transition-colors">Delete Book</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let formToSubmit = null;
+
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        formToSubmit = form;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        formToSubmit = null;
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (formToSubmit) {
+            formToSubmit.submit();
+        }
+    });
+</script>
 @endsection

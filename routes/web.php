@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('books/search-google', [AdminBookController::class, 'searchGoogleBooks'])->name('books.search-google');
     Route::resource('books', AdminBookController::class);
     Route::resource('users', AdminUserController::class);
 });
