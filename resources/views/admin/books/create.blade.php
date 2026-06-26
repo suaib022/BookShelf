@@ -11,6 +11,15 @@
 
     <div class="grid grid-cols-1 gap-8">
         <div class="col-span-1">
+            <!-- Google Books Search Widget -->
+            <div class="bg-white p-6 rounded-md shadow-sm border border-[#DDD8CC] mb-8">
+                <h2 class="text-lg font-bold text-[#382110] mb-4">Import from Google Books</h2>
+                <div class="flex items-center space-x-2 relative w-full">
+                    <input type="text" id="google-search-input" placeholder="Search by title, author, or ISBN..." class="w-full px-4 py-2 border border-[#DDD8CC] rounded focus:outline-none focus:border-[#00635D] bg-[#F4F1EA]">
+                    <button type="button" id="google-search-btn" class="px-6 py-2 bg-[#5C7A3E] text-white font-semibold rounded hover:opacity-90 transition-opacity">Search</button>
+                </div>
+                <div id="google-search-results" class="mt-4 hidden flex-col space-y-2 max-h-60 overflow-y-auto border border-[#DDD8CC] rounded p-2 bg-[#F4F1EA] w-full">
+                    <!-- Results injected here -->
                 </div>
             </div>
 
@@ -115,6 +124,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const searchBtn = document.getElementById('google-search-btn');
+    const searchInput = document.getElementById('google-search-input');
+    const resultsContainer = document.getElementById('google-search-results');
 
     searchBtn.addEventListener('click', function() {
         const query = searchInput.value.trim();
