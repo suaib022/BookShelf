@@ -182,4 +182,40 @@ class BookController extends Controller
         $book->delete();
         return redirect()->route('admin.books.index')->with('success', 'Book deleted successfully.');
     }
+
+    /**
+     * Search Google Books API.
+     */
+    public function searchGoogleBooks(Request $request)
+    {
+        $query = $request->query('q');
+        
+        if (!$query) {
+            return response()->json(['items' => []]);
+        }
+
+        try {
+            $params = [
+                'q' => $query,
+                'maxResults' => 10,
+            ];
+            
+            if (env('GOOGLE_BOOKS_API_KEY')) {
+                $params['key'] = env('GOOGLE_BOOKS_API_KEY');
+            }
+
+            $response = Http::get('https://www.googleapis.com/books/v1/volumes', $params);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json([
+                'error' => 'Google Books API error', 
+                'details' => $response->body()
+            ], $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
