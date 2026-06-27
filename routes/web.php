@@ -29,7 +29,8 @@ use App\Http\Controllers\UserProfileController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/users/{username}', [UserProfileController::class, 'show'])->name('profile.show');
 
-Route::resource('books', BookController::class);
+Route::resource('books', BookController::class)->only(['index', 'show']);
+Route::get('/genres/{genre:name}', [BookController::class, 'index'])->name('genres.show');
 Route::middleware(['auth', 'active_user'])->group(function () {
     Route::resource('shelves', ShelfController::class)->except(['index', 'show']);
     Route::resource('ratings', RatingController::class)->except(['index', 'show']);
