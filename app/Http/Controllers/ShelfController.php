@@ -25,8 +25,10 @@ class ShelfController extends Controller
     }
 
     /**
-     * Store a book on a shelf for the authenticated user.
-     * If the book is already shelved, it is removed from the old shelf first.
+     * Add/move a book to a shelf.
+     * A user's book can only live on ONE shelf at a time.
+     * Only one default shelf (Want to Read / Currently Reading / Read / Did Not Finish)
+     * can be active per book — book is removed from all other shelves before placement.
      */
     public function store(Request $request)
     {
@@ -35,28 +37,33 @@ class ShelfController extends Controller
             'shelf_name' => ['required', 'string', 'max:100'],
         ]);
 
-        $user   = $request->user();
-        $bookId = $request->input('book_id');
+        $user      = $request->user();
+        $bookId    = (int) $request->input('book_id');
+        $shelfName = $request->input('shelf_name');
 
-        // Resolve or create the target shelf for this user
+        // Resolve or create the shelf for this user
         $shelf = $user->shelves()->firstOrCreate(
-            ['name' => $request->input('shelf_name')],
+            ['name' => $shelfName],
             ['is_default' => false]
         );
 
-        // Remove from any previous shelf first
+        // Only one default shelf at a time:
+        // Remove the book from ALL of this user's shelves before placing it on the new one.
+        $userShelfIds = $user->shelves()->pluck('id')->toArray();
+
         ShelfBook::where('user_id', $user->id)
                  ->where('book_id', $bookId)
+                 ->whereIn('shelf_id', $userShelfIds)
                  ->delete();
 
-        // Add to the target shelf
+        // Place the book on the target shelf
         ShelfBook::create([
             'shelf_id' => $shelf->id,
             'book_id'  => $bookId,
             'user_id'  => $user->id,
         ]);
 
-        return back()->with('success', "Added to \"{$shelf->name}\"");
+        return back()->with('success', "Moved to \"{$shelf->name}\"");
     }
 
     /**
