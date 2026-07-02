@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Shelf;
+use App\Models\ShelfBook;
 
 class ShelfController extends Controller
 {
@@ -23,11 +25,38 @@ class ShelfController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a book on a shelf for the authenticated user.
+     * If the book is already shelved, it is removed from the old shelf first.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'book_id'    => ['required', 'integer', 'exists:books,id'],
+            'shelf_name' => ['required', 'string', 'max:100'],
+        ]);
+
+        $user   = $request->user();
+        $bookId = $request->input('book_id');
+
+        // Resolve or create the target shelf for this user
+        $shelf = $user->shelves()->firstOrCreate(
+            ['name' => $request->input('shelf_name')],
+            ['is_default' => false]
+        );
+
+        // Remove from any previous shelf first
+        ShelfBook::where('user_id', $user->id)
+                 ->where('book_id', $bookId)
+                 ->delete();
+
+        // Add to the target shelf
+        ShelfBook::create([
+            'shelf_id' => $shelf->id,
+            'book_id'  => $bookId,
+            'user_id'  => $user->id,
+        ]);
+
+        return back()->with('success', "Added to \"{$shelf->name}\"");
     }
 
     /**

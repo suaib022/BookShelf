@@ -4,8 +4,8 @@
           <!-- Left Column -->
           <aside class="w-full md:w-[220px] flex-shrink-0">
             <div class="aspect-[2/3] rounded overflow-hidden shadow-lg bg-gray-100">
-                @if($book->cover_image)
-                    <img src="{{ filter_var($book->cover_image, FILTER_VALIDATE_URL) ? $book->cover_image : Storage::url($book->cover_image) }}" alt="{{ $book->title }}" class="w-full h-full object-cover" />
+                @if($book->cover_url)
+                    <img src="{{ filter_var($book->cover_url, FILTER_VALIDATE_URL) ? $book->cover_url : Storage::url($book->cover_url) }}" alt="{{ $book->title }}" class="w-full h-full object-cover" />
                 @else
                     <div class="w-full h-full flex items-center justify-center text-gray-400">No Cover</div>
                 @endif
@@ -134,8 +134,8 @@
                 @foreach($relatedBooks as $rBook)
                   <a href="{{ route('books.show', $rBook) }}" class="flex-shrink-0 w-[140px] group block">
                     <div class="aspect-[2/3] rounded overflow-hidden shadow-md transition-all duration-200 group-hover:shadow-xl group-hover:-translate-y-1 bg-gray-100">
-                      @if($rBook->cover_image)
-                          <img src="{{ filter_var($rBook->cover_image, FILTER_VALIDATE_URL) ? $rBook->cover_image : Storage::url($rBook->cover_image) }}" alt="{{ $rBook->title }}" class="w-full h-full object-cover" />
+                      @if($rBook->cover_url)
+                          <img src="{{ filter_var($rBook->cover_url, FILTER_VALIDATE_URL) ? $rBook->cover_url : Storage::url($rBook->cover_url) }}" alt="{{ $rBook->title }}" class="w-full h-full object-cover" />
                       @else
                           <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-2">{{ $rBook->title }}</div>
                       @endif
@@ -143,6 +143,9 @@
                     <h4 class="mt-2 font-bold text-xs text-gray-800 leading-snug line-clamp-2 group-hover:text-[#00635d]">
                       {{ $rBook->title }}
                     </h4>
+                    <p class="text-[10px] text-gray-500 mt-0.5">
+                      {{ $rBook->authors->pluck('name')->join(', ') }}
+                    </p>
                     <div class="flex items-center gap-1 mt-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                       <span class="text-xs text-gray-600 font-semibold">{{ number_format($rBook->avg_rating, 1) }}</span>
