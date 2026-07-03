@@ -92,22 +92,22 @@
 
                 <hr class="border-[#DDD8CC]" />
 
-                <!-- My Shelves -->
+                <!-- My Books -->
                 <div class="py-4">
                     <div class="px-4">
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">My Shelves</h3>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">My Books</h3>
                         <ul class="space-y-1.5">
                             <li class="flex items-center gap-2 text-sm">
                                 <span class="text-[#00635D] font-semibold w-5 text-right tabular-nums">{{ $shelfCounts['Want to Read'] }}</span>
-                                <a href="#" class="text-[#00635D] hover:underline">Want to Read</a>
+                                <a href="{{ route('my-books.index', ['shelf' => 'want-to-read']) }}" class="text-[#00635D] hover:underline">Want to Read</a>
                             </li>
                             <li class="flex items-center gap-2 text-sm">
                                 <span class="text-[#00635D] font-semibold w-5 text-right tabular-nums">{{ $shelfCounts['Currently Reading'] }}</span>
-                                <a href="#" class="text-[#00635D] hover:underline">Currently Reading</a>
+                                <a href="{{ route('my-books.index', ['shelf' => 'currently-reading']) }}" class="text-[#00635D] hover:underline">Currently Reading</a>
                             </li>
                             <li class="flex items-center gap-2 text-sm">
                                 <span class="text-[#00635D] font-semibold w-5 text-right tabular-nums">{{ $shelfCounts['Read'] }}</span>
-                                <a href="#" class="text-[#00635D] hover:underline">Read</a>
+                                <a href="{{ route('my-books.index', ['shelf' => 'read']) }}" class="text-[#00635D] hover:underline">Read</a>
                             </li>
                         </ul>
                     </div>

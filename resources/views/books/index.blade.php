@@ -94,9 +94,9 @@
               @foreach($books as $book)
                 <a href="{{ route('books.show', $book) }}" class="group cursor-pointer block">
                   <div class="aspect-[2/3] rounded overflow-hidden shadow-md transition-all duration-200 group-hover:shadow-xl group-hover:-translate-y-1 group-hover:scale-[1.02] bg-gray-100">
-                    @if($book->cover_image)
+                    @if($book->cover_url)
                         <img
-                          src="{{ filter_var($book->cover_image, FILTER_VALIDATE_URL) ? $book->cover_image : Storage::url($book->cover_image) }}"
+                          src="{{ filter_var($book->cover_url, FILTER_VALIDATE_URL) ? $book->cover_url : Storage::url($book->cover_url) }}"
                           alt="{{ $book->title }}"
                           class="w-full h-full object-cover"
                         />

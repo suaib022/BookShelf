@@ -43,10 +43,10 @@
                     </li>
                     <li class="relative">
                       <a
-                        href="/shelves"
-                        class="flex items-center gap-0.5 px-3 py-1.5 text-sm rounded transition-colors {{ request()->is('shelves*') ? 'text-[#00635D] font-semibold' : 'text-[#333] hover:text-[#00635D] hover:bg-[#F4F1EA]' }}"
+                        href="{{ route('my-books.index') }}"
+                        class="flex items-center gap-0.5 px-3 py-1.5 text-sm rounded transition-colors {{ request()->is('my-books*') ? 'text-[#00635D] font-semibold' : 'text-[#333] hover:text-[#00635D] hover:bg-[#F4F1EA]' }}"
                       >
-                        My Shelves
+                        My Books
                       </a>
                     </li>
                     <li class="relative">
@@ -57,12 +57,18 @@
                         Browse
                         <svg class="w-3 h-3 mt-px opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                       </button>
-                      <div x-show="openDropdown === 'Browse'" @click.away="openDropdown = null" style="display: none;" class="absolute top-full left-0 mt-1 bg-white border border-[#DDD8CC] rounded shadow-lg py-1 min-w-[170px] z-50">
-                        @foreach(['Lists', 'News & Interviews', 'New Releases', 'Popular', 'Choice Awards', 'Genres'] as $item)
-                            <a href="#" class="block px-4 py-2 text-sm text-[#333] hover:bg-[#F4F1EA] hover:text-[#00635D] transition-colors">
-                              {{ $item }}
+                      <div x-show="openDropdown === 'Browse'" @click.away="openDropdown = null" style="display: none;" class="absolute top-full left-0 mt-1 bg-[#F4F1EA] border border-[#DDD8CC] rounded shadow-lg py-2 min-w-[200px] z-50">
+                        <div class="px-4 py-2 text-sm font-bold text-[#382110] tracking-wide uppercase">
+                            Favorite Genres
+                        </div>
+                        @foreach(['Biography', 'Business', 'Comics', 'Fiction', 'Historical Fiction', 'History', 'Mystery', 'Poetry'] as $genre)
+                            <a href="{{ route('genres.show', $genre) }}" class="block px-4 py-2 text-[15px] text-[#333] hover:bg-white hover:text-[#00635D] transition-colors">
+                              {{ $genre }}
                             </a>
                         @endforeach
+                        <a href="{{ route('books.index') }}" class="block px-4 py-2 text-[15px] text-[#333] hover:bg-white hover:text-[#00635D] transition-colors border-t border-[#DDD8CC] mt-2 pt-2">
+                          All Genres
+                        </a>
                       </div>
                     </li>
                     <li class="relative">

@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
             $readShelf = \App\Models\Shelf::create(['user_id' => $u->id, 'name' => 'Read', 'is_default' => true]);
             $currentlyReadingShelf = \App\Models\Shelf::create(['user_id' => $u->id, 'name' => 'Currently Reading', 'is_default' => true]);
             $wantToReadShelf = \App\Models\Shelf::create(['user_id' => $u->id, 'name' => 'Want to Read', 'is_default' => true]);
+            $didNotFinishShelf = \App\Models\Shelf::create(['user_id' => $u->id, 'name' => 'Did Not Finish', 'is_default' => true]);
             
             $booksForUser = $allBooks->random(5);
             foreach ($booksForUser as $idx => $b) {

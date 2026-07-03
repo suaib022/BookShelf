@@ -179,8 +179,31 @@ class BookController extends Controller
      */
     public function destroy(Book $book)
     {
+        if ($book->cover_url && \Storage::disk('public')->exists($book->cover_url)) {
+            \Storage::disk('public')->delete($book->cover_url);
+        }
+
         $book->delete();
         return redirect()->route('admin.books.index')->with('success', 'Book deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'book_ids' => 'required|array',
+            'book_ids.*' => 'exists:books,id',
+        ]);
+
+        $books = Book::whereIn('id', $request->book_ids)->get();
+
+        foreach ($books as $book) {
+            if ($book->cover_url && \Storage::disk('public')->exists($book->cover_url)) {
+                \Storage::disk('public')->delete($book->cover_url);
+            }
+            $book->delete();
+        }
+
+        return redirect()->route('admin.books.index')->with('success', count($books) . ' books deleted successfully.');
     }
 
     /**

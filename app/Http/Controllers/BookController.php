@@ -112,7 +112,7 @@ class BookController extends Controller
         if (auth()->check()) {
             $followingIds = \DB::table('follows')
                 ->where('follower_id', auth()->id())
-                ->pluck('following_id');
+                ->pluck('followee_id');
 
             if ($followingIds->count() > 0) {
                 $followingReviews = \App\Models\Review::with(['user'])

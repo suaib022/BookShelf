@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MyBooksController;
 use App\Http\Controllers\UserProfileController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -32,6 +33,7 @@ Route::get('/users/{username}', [UserProfileController::class, 'show'])->name('p
 Route::resource('books', BookController::class)->only(['index', 'show']);
 Route::get('/genres/{genre:name}', [BookController::class, 'index'])->name('genres.show');
 Route::middleware(['auth', 'active_user'])->group(function () {
+    Route::get('/my-books', [MyBooksController::class, 'index'])->name('my-books.index');
     Route::resource('shelves', ShelfController::class)->except(['index', 'show']);
     Route::resource('ratings', RatingController::class)->except(['index', 'show']);
     Route::resource('reviews', ReviewController::class)->except(['index', 'show']);
@@ -62,6 +64,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('books/search-google', [AdminBookController::class, 'searchGoogleBooks'])->name('books.search-google');
+    Route::post('books/bulk-destroy', [AdminBookController::class, 'bulkDestroy'])->name('books.bulkDestroy');
     Route::resource('books', AdminBookController::class);
     Route::resource('users', AdminUserController::class);
 });
