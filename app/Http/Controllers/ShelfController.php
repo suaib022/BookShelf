@@ -17,7 +17,8 @@ class ShelfController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Create a brand-new custom shelf (no book attached).
+     * Used from the "Add shelf" button on the My Books page.
      */
     public function create()
     {
@@ -25,10 +26,9 @@ class ShelfController extends Controller
     }
 
     /**
-     * Add/move a book to a shelf.
-     * A user's book can only live on ONE shelf at a time.
-     * Only one default shelf (Want to Read / Currently Reading / Read / Did Not Finish)
-     * can be active per book — book is removed from all other shelves before placement.
+     * Add/move a book to a shelf (or create a custom shelf and shelve the book there).
+     * Only one shelf per user per book is allowed at a time — book is removed from all
+     * other shelves (default or custom) before being placed on the target shelf.
      */
     public function store(Request $request)
     {
@@ -47,8 +47,7 @@ class ShelfController extends Controller
             ['is_default' => false]
         );
 
-        // Only one default shelf at a time:
-        // Remove the book from ALL of this user's shelves before placing it on the new one.
+        // Only one shelf at a time: remove from all existing shelves first
         $userShelfIds = $user->shelves()->pluck('id')->toArray();
 
         ShelfBook::where('user_id', $user->id)
@@ -56,7 +55,6 @@ class ShelfController extends Controller
                  ->whereIn('shelf_id', $userShelfIds)
                  ->delete();
 
-        // Place the book on the target shelf
         ShelfBook::create([
             'shelf_id' => $shelf->id,
             'book_id'  => $bookId,
@@ -83,18 +81,44 @@ class ShelfController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Rename a custom shelf.
+     * Default shelves (is_default = true) cannot be renamed.
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate(['name' => ['required', 'string', 'max:100']]);
+
+        $shelf = Shelf::where('id', $id)
+                      ->where('user_id', $request->user()->id)
+                      ->firstOrFail();
+
+        if ($shelf->is_default) {
+            return back()->withErrors(['name' => 'Default shelves cannot be renamed.']);
+        }
+
+        $shelf->update(['name' => $request->input('name')]);
+
+        return back()->with('success', 'Shelf renamed.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete a custom shelf and all its ShelfBook entries.
+     * Default shelves (is_default = true) are protected from deletion.
      */
     public function destroy(string $id)
     {
-        //
+        $user  = request()->user();
+        $shelf = Shelf::where('id', $id)
+                      ->where('user_id', $user->id)
+                      ->firstOrFail();
+
+        if ($shelf->is_default) {
+            return back()->withErrors(['shelf' => 'Default shelves cannot be deleted.']);
+        }
+
+        ShelfBook::where('shelf_id', $shelf->id)->delete();
+        $shelf->delete();
+
+        return back()->with('success', "Shelf \"{$shelf->name}\" deleted.");
     }
 }
