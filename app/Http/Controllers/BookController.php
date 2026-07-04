@@ -130,6 +130,11 @@ class BookController extends Controller
             ->latest()
             ->paginate(5);
 
+        // Logged-in user's own rating for this book
+        $userRating = auth()->check()
+            ? optional(\App\Models\Rating::where('user_id', auth()->id())->where('book_id', $book->id)->first())->stars
+            : null;
+
         return view('books.show', compact(
             'book', 
             'currentlyReadingCount', 
@@ -137,7 +142,8 @@ class BookController extends Controller
             'starBreakdown', 
             'relatedBooks', 
             'followingReviews', 
-            'reviews'
+            'reviews',
+            'userRating'
         ));
     }
 }

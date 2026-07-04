@@ -31,17 +31,32 @@
               </form>
             </div>
             
-            <div class="mt-4 text-center">
+            {{-- Fetch-based interactive star rating --}}
+            <div class="mt-4 text-center" id="star-rating-widget">
               <span class="text-xs text-gray-500 block mb-1">Rate this book</span>
-              <form action="{{ route('ratings.store') }}" method="POST" class="flex justify-center gap-1">
-                @csrf
-                <input type="hidden" name="book_id" value="{{ $book->id }}">
+              <div class="flex justify-center gap-1" id="star-row">
                 @for($i=1; $i<=5; $i++)
-                  <button type="submit" name="stars" value="{{ $i }}" class="p-0.5 transition-transform hover:scale-110 text-gray-300 hover:text-amber-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <button
+                    type="button"
+                    data-stars="{{ $i }}"
+                    data-book="{{ $book->id }}"
+                    onclick="submitRating({{ $i }}, {{ $book->id }})"
+                    class="star-btn p-0.5 transition-transform hover:scale-125 {{ ($userRating && $i <= $userRating) ? 'text-amber-400' : 'text-gray-300' }} hover:text-amber-400"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                         fill="{{ ($userRating && $i <= $userRating) ? 'currentColor' : 'none' }}"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         class="star-svg">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
                   </button>
                 @endfor
-              </form>
+              </div>
+              @if($userRating)
+                <p class="text-xs text-gray-400 mt-1" id="my-rating-label">Your rating: {{ $userRating }}★</p>
+              @else
+                <p class="text-xs text-gray-400 mt-1" id="my-rating-label">Click to rate</p>
+              @endif
             </div>
             @else
             <div class="mt-4 text-center text-sm text-gray-500">
@@ -160,14 +175,14 @@
             <section class="mb-8">
               <h3 class="font-bold text-sm text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Ratings & Reviews</h3>
               <div class="flex flex-col items-center mb-6">
-                <div class="text-5xl font-bold text-gray-800 mb-1">{{ number_format($book->avg_rating, 1) }}</div>
+                <div class="text-5xl font-bold text-gray-800 mb-1" id="avg-rating-display">{{ number_format($book->avg_rating, 1) }}</div>
                 <div class="flex mb-1">
                     @for($i = 1; $i <= 5; $i++)
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="{{ $i <= round($book->avg_rating) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{{ $i <= round($book->avg_rating) ? 'text-amber-400' : 'text-gray-300 fill-gray-200' }}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     @endfor
                 </div>
-                <p class="text-sm text-gray-500">
-                  {{ number_format($book->ratings_count) }} ratings
+                <p class="text-sm text-gray-500" id="ratings-count-display">
+                   {{ number_format($book->ratings_count) }} ratings
                 </p>
               </div>
 
@@ -318,4 +333,66 @@
         background: #a3a3a3; 
       }
     </style>
+
+    <script>
+      // Fetch-based star rating — no page reload
+      function submitRating(stars, bookId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Optimistic UI — paint stars immediately
+        paintStars(stars);
+
+        fetch('{{ route("ratings.store") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({ book_id: bookId, stars: stars }),
+        })
+        .then(r => r.json())
+        .then(data => {
+          // Update average display
+          const avgEl = document.getElementById('avg-rating-display');
+          if (avgEl) avgEl.textContent = parseFloat(data.avg_rating).toFixed(1);
+          const cntEl = document.getElementById('ratings-count-display');
+          if (cntEl) cntEl.textContent = data.ratings_count + ' ratings';
+          const lbl = document.getElementById('my-rating-label');
+          if (lbl) lbl.textContent = 'Your rating: ' + data.user_rating + '★';
+        })
+        .catch(() => {
+          // On error just reload to reflect real state
+          window.location.reload();
+        });
+      }
+
+      // Paint stars filled/empty up to the given value
+      function paintStars(value) {
+        document.querySelectorAll('.star-btn').forEach(btn => {
+          const n = parseInt(btn.dataset.stars);
+          const svg = btn.querySelector('.star-svg');
+          if (n <= value) {
+            btn.classList.add('text-amber-400');
+            btn.classList.remove('text-gray-300');
+            svg.setAttribute('fill', 'currentColor');
+          } else {
+            btn.classList.add('text-gray-300');
+            btn.classList.remove('text-amber-400');
+            svg.setAttribute('fill', 'none');
+          }
+        });
+      }
+
+      // Hover preview
+      document.querySelectorAll('.star-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => paintStars(parseInt(btn.dataset.stars)));
+        btn.addEventListener('mouseleave', () => {
+          // Restore saved rating (read from label)
+          const lbl = document.getElementById('my-rating-label');
+          const match = lbl ? lbl.textContent.match(/(\d)/) : null;
+          paintStars(match ? parseInt(match[1]) : 0);
+        });
+      });
+    </script>
 </x-app-layout>
