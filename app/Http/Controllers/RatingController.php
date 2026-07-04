@@ -3,62 +3,75 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Book;
+use App\Models\Rating;
 
 class RatingController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Upsert a rating for the authenticated user.
+     * One rating per user per book — update if it already exists, create if not.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'book_id' => ['required', 'integer', 'exists:books,id'],
+            'stars'   => ['required', 'integer', 'min:1', 'max:5'],
+        ]);
+
+        $user   = $request->user();
+        $bookId = (int) $request->input('book_id');
+        $stars  = (int) $request->input('stars');
+
+        $rating = Rating::updateOrCreate(
+            ['user_id' => $user->id, 'book_id' => $bookId],
+            ['stars'   => $stars]
+        );
+
+        // Recalculate book aggregate stats
+        $book = Book::findOrFail($bookId);
+        $book->updateAvgRating();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'avg_rating'    => round($book->fresh()->avg_rating, 2),
+                'ratings_count' => $book->fresh()->ratings_count,
+                'user_rating'   => $stars,
+            ]);
+        }
+
+        return back()->with('success', "You rated this book {$stars} star" . ($stars > 1 ? 's' : '') . '.');
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
+     * Delete the authenticated user's rating for a book.
      */
     public function destroy(string $id)
     {
-        //
+        $user   = request()->user();
+        $rating = Rating::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+        $bookId = $rating->book_id;
+
+        $rating->delete();
+
+        // Recalculate book aggregate stats
+        $book = Book::findOrFail($bookId);
+        $book->updateAvgRating();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'avg_rating'    => round($book->fresh()->avg_rating, 2),
+                'ratings_count' => $book->fresh()->ratings_count,
+                'user_rating'   => 0,
+            ]);
+        }
+
+        return back()->with('success', 'Your rating has been removed.');
     }
+
+    public function index() {}
+    public function create() {}
+    public function show(string $id) {}
+    public function edit(string $id) {}
+    public function update(Request $request, string $id) {}
 }

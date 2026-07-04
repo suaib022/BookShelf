@@ -30,4 +30,17 @@ class Book extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Recompute avg_rating and ratings_count from the ratings table and persist.
+     * Call this after any rating is saved or deleted.
+     */
+    public function updateAvgRating(): void
+    {
+        $agg = $this->ratings()->selectRaw('count(*) as cnt, avg(stars) as avg')->first();
+        $this->update([
+            'ratings_count' => $agg->cnt ?? 0,
+            'avg_rating'    => round($agg->avg ?? 0, 2),
+        ]);
+    }
 }
