@@ -201,12 +201,52 @@
                 @endforeach
               </div>
 
-              <!-- Write a Review -->
+              {{-- Review Composer --}}
               @auth
-              <div class="flex flex-col items-center border-t border-gray-100 pt-6">
-                <form action="{{ route('reviews.create') }}" method="GET">
+              @php
+                $myReview = $reviews->firstWhere('user_id', auth()->id())
+                    ?? \App\Models\Review::where('user_id', auth()->id())->where('book_id', $book->id)->first();
+              @endphp
+              <div class="border-t border-gray-100 pt-6">
+                <h4 class="text-sm font-bold text-gray-700 mb-3">{{ $myReview ? 'Edit Your Review' : 'Write a Review' }}</h4>
+                @if($myReview)
+                  <form action="{{ route('reviews.update', $myReview->id) }}" method="POST" class="space-y-3">
+                    @csrf
+                    @method('PUT')
+                @else
+                  <form action="{{ route('reviews.store') }}" method="POST" class="space-y-3">
+                    @csrf
                     <input type="hidden" name="book_id" value="{{ $book->id }}">
-                    <button type="submit" class="bg-[#3c6138] text-white px-8 py-2 rounded font-semibold hover:bg-[#2e4d2b] transition-colors">Write a Review</button>
+                @endif
+                  <textarea
+                    name="body"
+                    rows="4"
+                    placeholder="Write your thoughts about this book…"
+                    class="w-full text-sm border border-gray-200 rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d] resize-none"
+                    required
+                  >{{ old('body', $myReview?->body) }}</textarea>
+                  <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                    <input type="checkbox" name="contains_spoilers" value="1"
+                           class="rounded border-gray-300 text-[#3c6138] focus:ring-[#3c6138]"
+                           {{ ($myReview?->contains_spoilers) ? 'checked' : '' }}>
+                    This review contains spoilers
+                  </label>
+                  <div class="flex gap-2">
+                    <button type="submit"
+                      class="bg-[#3c6138] text-white text-sm px-5 py-2 rounded font-semibold hover:bg-[#2e4d2b] transition-colors">
+                      {{ $myReview ? 'Update Review' : 'Post Review' }}
+                    </button>
+                    @if($myReview)
+                      <form action="{{ route('reviews.destroy', $myReview->id) }}" method="POST" class="inline">
+                        @csrf @method('DELETE')
+                        <button type="submit"
+                          class="text-sm px-4 py-2 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
+                          onclick="return confirm('Delete your review?')">
+                          Delete
+                        </button>
+                      </form>
+                    @endif
+                  </div>
                 </form>
               </div>
               @endauth
@@ -220,8 +260,8 @@
                 <div class="space-y-4">
                   @foreach($followingReviews as $review)
                     <div class="text-sm text-gray-700 border-l-2 border-[#3c6138] pl-3 py-1 bg-gray-50">
-                        <span class="font-semibold">{{ $review->user->name }}</span> rated it {{ $review->rating }} stars.
-                        <div class="mt-1 line-clamp-2">{{ $review->content }}</div>
+                        <span class="font-semibold">{{ $review->user->name }}</span> rated it {{ $review->rating?->stars ?? 0 }} stars.
+                        <div class="mt-1 line-clamp-2">{{ $review->body }}</div>
                     </div>
                   @endforeach
                 </div>
@@ -273,22 +313,42 @@
                         <div class="flex items-center gap-2 mt-1.5">
                           <div class="flex">
                             @for($i = 1; $i <= 5; $i++)
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="{{ $i <= $review->rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{{ $i <= $review->rating ? 'text-amber-400' : 'text-gray-300 fill-gray-200' }}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="{{ $i <= ($review->rating?->stars ?? 0) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{{ $i <= ($review->rating?->stars ?? 0) ? 'text-amber-400' : 'text-gray-300 fill-gray-200' }}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             @endfor
                           </div>
                           <span class="text-xs text-gray-400">·</span>
                           <span class="text-xs text-gray-400">{{ $review->created_at->format('M j, Y') }}</span>
                         </div>
                         
-                        <div class="text-sm text-gray-700 mt-2 leading-relaxed" :class="expanded ? '' : 'line-clamp-4'">
-                          {{ $review->content }}
+                        <div class="mt-2" x-data="{ spoilerRevealed: false }">
+                          @if($review->contains_spoilers)
+                            <div x-show="!spoilerRevealed" class="bg-gray-100 rounded border border-gray-200 p-3 text-center">
+                              <p class="text-sm text-gray-600 font-semibold mb-1">This review contains spoilers.</p>
+                              <button @click="spoilerRevealed = true" class="text-xs px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">Show Review</button>
+                            </div>
+                            <div x-show="spoilerRevealed" style="display: none;">
+                                <div class="text-sm text-gray-700 leading-relaxed" :class="expanded ? '' : 'line-clamp-4'">
+                                  {{ $review->body }}
+                                </div>
+                                
+                                @if(strlen($review->body) > 200)
+                                  <button @click="expanded = !expanded" class="text-sm text-[#00635d] hover:underline mt-1 block">
+                                    <span x-text="expanded ? 'Show less' : 'Show more'">Show more</span>
+                                  </button>
+                                @endif
+                            </div>
+                          @else
+                            <div class="text-sm text-gray-700 leading-relaxed" :class="expanded ? '' : 'line-clamp-4'">
+                              {{ $review->body }}
+                            </div>
+                            
+                            @if(strlen($review->body) > 200)
+                              <button @click="expanded = !expanded" class="text-sm text-[#00635d] hover:underline mt-1 block">
+                                <span x-text="expanded ? 'Show less' : 'Show more'">Show more</span>
+                              </button>
+                            @endif
+                          @endif
                         </div>
-                        
-                        @if(strlen($review->content) > 200)
-                          <button @click="expanded = !expanded" class="text-sm text-[#00635d] hover:underline mt-1">
-                            <span x-text="expanded ? 'Show less' : 'Show more'">Show more</span>
-                          </button>
-                        @endif
                         
                         <div class="flex items-center gap-5 mt-3 border-t border-gray-50 pt-3">
                           <div class="flex items-center gap-1.5 text-sm text-gray-500">

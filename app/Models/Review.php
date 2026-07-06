@@ -23,6 +23,11 @@ class Review extends Model
         return $this->hasMany(ReviewComment::class);
     }
 
+    public function rating()
+    {
+        return $this->belongsTo(Rating::class);
+    }
+
     public function likes()
     {
         return $this->hasMany(ReviewLike::class);

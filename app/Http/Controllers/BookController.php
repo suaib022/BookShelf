@@ -124,7 +124,7 @@ class BookController extends Controller
         }
 
         // Community reviews
-        $reviews = \App\Models\Review::with(['user'])
+        $reviews = \App\Models\Review::with(['user', 'rating'])
             ->where('book_id', $book->id)
             ->withCount(['comments', 'likes'])
             ->latest()
