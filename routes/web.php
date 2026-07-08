@@ -41,8 +41,7 @@ Route::middleware(['auth', 'active_user'])->group(function () {
     Route::post('/reviews/{review}/comments', [ReviewCommentController::class, 'store'])->name('reviews.comments.store');
     Route::delete('/reviews/comments/{comment}', [ReviewCommentController::class, 'destroy'])->name('reviews.comments.destroy');
 
-    Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'store'])->name('reviews.like');
-    Route::delete('/reviews/{review}/unlike', [ReviewLikeController::class, 'destroy'])->name('reviews.unlike');
+    Route::post('/reviews/{review}/toggle-like', [ReviewLikeController::class, 'toggle'])->name('reviews.like.toggle');
 
     Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');

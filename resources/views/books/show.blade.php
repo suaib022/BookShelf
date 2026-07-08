@@ -350,15 +350,51 @@
                           @endif
                         </div>
                         
-                        <div class="flex items-center gap-5 mt-3 border-t border-gray-50 pt-3">
-                          <div class="flex items-center gap-1.5 text-sm text-gray-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                            <span>{{ $review->likes_count ?? 0 }}</span>
-                          </div>
-                          <div class="flex items-center gap-1.5 text-sm text-gray-500">
+                        @php
+                            $hasLiked = auth()->check() ? \DB::table('review_likes')->where('review_id', $review->id)->where('user_id', auth()->id())->exists() : false;
+                        @endphp
+                        <div class="flex items-center gap-5 mt-3 border-t border-gray-50 pt-3" x-data="{ showComments: false }">
+                          <button onclick="toggleLike({{ $review->id }}, this)" data-liked="{{ $hasLiked ? 'true' : 'false' }}" class="flex items-center gap-1.5 text-sm transition-colors {{ $hasLiked ? 'text-red-500' : 'text-gray-500 hover:text-gray-700' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="{{ $hasLiked ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="like-icon"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                            <span class="like-count">{{ $review->likes_count ?? 0 }}</span>
+                          </button>
+                          <button @click="showComments = !showComments" class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
                             <span>{{ $review->comments_count ?? 0 }}</span>
-                          </div>
+                          </button>
+                        </div>
+
+                        {{-- Comments Section --}}
+                        <div x-show="showComments" style="display: none;" class="mt-4 pl-4 border-l-2 border-gray-100 space-y-4">
+                            @foreach($review->comments as $comment)
+                                <div class="text-sm">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-gray-800">{{ $comment->user->name }}</span>
+                                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                                            <span>{{ $comment->created_at->diffForHumans() }}</span>
+                                            @if(auth()->id() === $comment->user_id)
+                                                <form action="{{ route('reviews.comments.destroy', $comment->id) }}" method="POST" class="inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-red-500 hover:underline">Delete</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="text-gray-700 mt-1">{{ $comment->body }}</div>
+                                </div>
+                            @endforeach
+
+                            @auth
+                            <form action="{{ route('reviews.comments.store', $review->id) }}" method="POST" class="mt-3 flex gap-2">
+                                @csrf
+                                <input type="text" name="body" placeholder="Write a comment..." class="flex-1 text-sm border border-gray-200 rounded px-3 py-1.5 focus:outline-none focus:border-[#00635d] focus:ring-1 focus:ring-[#00635d]" required>
+                                <button type="submit" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm font-semibold hover:bg-gray-200 transition-colors">Post</button>
+                            </form>
+                            @else
+                            <div class="text-sm text-gray-500 mt-2">
+                                <a href="{{ route('login') }}" class="text-[#00635d] hover:underline">Log in</a> to post a comment.
+                            </div>
+                            @endauth
                         </div>
                       </div>
                     </div>
@@ -454,5 +490,61 @@
           paintStars(match ? parseInt(match[1]) : 0);
         });
       });
+
+      // Toggle Review Like
+      function toggleLike(reviewId, btnEl) {
+        @auth
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const isLiked = btnEl.dataset.liked === 'true';
+        
+        // Optimistic update
+        btnEl.dataset.liked = !isLiked;
+        const icon = btnEl.querySelector('.like-icon');
+        const countSpan = btnEl.querySelector('.like-count');
+        let currentCount = parseInt(countSpan.textContent) || 0;
+        
+        if (!isLiked) {
+            btnEl.classList.remove('text-gray-500', 'hover:text-gray-700');
+            btnEl.classList.add('text-red-500');
+            icon.setAttribute('fill', 'currentColor');
+            countSpan.textContent = currentCount + 1;
+        } else {
+            btnEl.classList.add('text-gray-500', 'hover:text-gray-700');
+            btnEl.classList.remove('text-red-500');
+            icon.setAttribute('fill', 'none');
+            countSpan.textContent = currentCount - 1;
+        }
+
+        fetch(`/reviews/${reviewId}/toggle-like`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+          }
+        })
+        .then(r => r.json())
+        .then(data => {
+            // Ensure synced with server
+            countSpan.textContent = data.likes_count;
+            btnEl.dataset.liked = data.status === 'liked' ? 'true' : 'false';
+            if (data.status === 'liked') {
+                btnEl.classList.remove('text-gray-500', 'hover:text-gray-700');
+                btnEl.classList.add('text-red-500');
+                icon.setAttribute('fill', 'currentColor');
+            } else {
+                btnEl.classList.add('text-gray-500', 'hover:text-gray-700');
+                btnEl.classList.remove('text-red-500');
+                icon.setAttribute('fill', 'none');
+            }
+        })
+        .catch(() => {
+          // On error just reload to reflect real state
+          window.location.reload();
+        });
+        @else
+        window.location.href = "{{ route('login') }}";
+        @endauth
+      }
     </script>
 </x-app-layout>

@@ -3,62 +3,37 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Review;
+use App\Models\ReviewComment;
 
 class ReviewCommentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Store a newly created comment in storage.
      */
-    public function index()
+    public function store(Request $request, Review $review)
     {
-        //
+        $request->validate([
+            'body' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $review->comments()->create([
+            'user_id' => $request->user()->id,
+            'body' => $request->input('body'),
+        ]);
+
+        return back()->with('success', 'Comment posted.');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Remove the specified comment from storage.
      */
-    public function create()
+    public function destroy(ReviewComment $comment)
     {
-        //
-    }
+        abort_if($comment->user_id !== request()->user()->id, 403);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $comment->delete();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return back()->with('success', 'Comment deleted.');
     }
 }
