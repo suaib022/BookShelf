@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\User;
 class FollowController extends Controller
 {
     /**
@@ -22,43 +22,27 @@ class FollowController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request, User $user)
     {
-        //
+        if (auth()->id() === $user->id) {
+            return response()->json(['error' => 'You cannot follow yourself'], 422);
+        }
+
+        auth()->user()->following()->syncWithoutDetaching([$user->id]);
+
+        return response()->json([
+            'status' => 'following',
+            'followers_count' => $user->followers()->count()
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function destroy(User $user)
     {
-        //
-    }
+        auth()->user()->following()->detach($user->id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'status' => 'unfollowed',
+            'followers_count' => $user->followers()->count()
+        ]);
     }
 }

@@ -23,9 +23,15 @@
                     <a href="#" class="block text-sm text-[#00635D] hover:underline">
                         {{ $stats['reviews'] }} reviews
                     </a>
-                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
-                        {{ $stats['followers'] }} followers &middot; {{ $stats['following'] }} following
-                    </a>
+                    <div class="text-sm">
+                        <a href="{{ route('profile.followers', $user->username) }}" class="text-[#00635D] hover:underline">
+                            {{ $stats['followers'] }} followers
+                        </a>
+                        <span class="text-[#888]">&middot;</span>
+                        <a href="{{ route('profile.following', $user->username) }}" class="text-[#00635D] hover:underline">
+                            {{ $stats['following'] }} following
+                        </a>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -65,22 +71,12 @@
                             @endif
                         </div>
                     @elseif(auth()->check())
-                        @if($isFollowing)
-                            <form action="{{ route('users.unfollow', $user) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-4 py-1.5 rounded text-sm font-semibold border border-[#C8C0B0] text-[#555] hover:border-[#999] hover:text-[#333] transition-colors">
-                                    Following
-                                </button>
-                            </form>
-                        @else
-                            <form action="{{ route('users.follow', $user) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="px-4 py-1.5 rounded text-sm font-semibold bg-[#5C7A3E] hover:opacity-90 text-white transition-opacity">
-                                    Follow
-                                </button>
-                            </form>
-                        @endif
+                        <button id="follow-btn" 
+                                data-user-id="{{ $user->id }}" 
+                                data-is-following="{{ $isFollowing ? 'true' : 'false' }}"
+                                class="px-4 py-1.5 rounded text-sm font-semibold transition-colors {{ $isFollowing ? 'border border-[#C8C0B0] text-[#555] hover:border-[#999] hover:text-[#333]' : 'bg-[#5C7A3E] hover:opacity-90 text-white' }}">
+                            {{ $isFollowing ? 'Following' : 'Follow' }}
+                        </button>
                     @endif
                 </div>
                 <div class="space-y-1">
@@ -179,7 +175,7 @@
                         @endforelse
                     </div>
                     @if($followers->count() > 0)
-                        <a href="#" class="text-sm text-[#00635D] hover:underline font-medium">See all followers &raquo;</a>
+                        <a href="{{ route('profile.followers', $user->username) }}" class="text-sm text-[#00635D] hover:underline font-medium">See all followers &raquo;</a>
                     @endif
                 </div>
             </div>
@@ -187,4 +183,61 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const followBtn = document.getElementById('follow-btn');
+        if (followBtn) {
+            followBtn.addEventListener('click', async function() {
+                const userId = this.getAttribute('data-user-id');
+                const isFollowing = this.getAttribute('data-is-following') === 'true';
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                              || document.querySelector('input[name="_token"]')?.value;
+
+                // Disable button while processing
+                this.disabled = true;
+                
+                try {
+                    const url = isFollowing ? `/users/${userId}/unfollow` : `/users/${userId}/follow`;
+                    const method = isFollowing ? 'DELETE' : 'POST';
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        alert(errorData.error || 'An error occurred.');
+                        this.disabled = false;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status === 'following') {
+                        this.setAttribute('data-is-following', 'true');
+                        this.innerText = 'Following';
+                        this.className = 'px-4 py-1.5 rounded text-sm font-semibold transition-colors border border-[#C8C0B0] text-[#555] hover:border-[#999] hover:text-[#333]';
+                    } else if (data.status === 'unfollowed') {
+                        this.setAttribute('data-is-following', 'false');
+                        this.innerText = 'Follow';
+                        this.className = 'px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-[#5C7A3E] hover:opacity-90 text-white';
+                    }
+                    
+                    // Note: We don't live-update the followers count on this page because it's static PHP text,
+                    // but the button toggles instantly. A full refresh would show the new count.
+                } catch (err) {
+                    console.error(err);
+                    alert('Network error.');
+                }
+                
+                this.disabled = false;
+            });
+        }
+    });
+</script>
 @endsection
