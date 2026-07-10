@@ -29,12 +29,16 @@ use App\Http\Controllers\UserProfileController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/users/{username}', [UserProfileController::class, 'show'])->name('profile.show');
-
+Route::get('/users/{username}/followers', [UserProfileController::class, 'followers'])->name('profile.followers');
+Route::get('/users/{username}/following', [UserProfileController::class, 'following'])->name('profile.following');
 Route::resource('books', BookController::class)->only(['index', 'show']);
 Route::get('/genres/{genre:name}', [BookController::class, 'index'])->name('genres.show');
 Route::middleware(['auth', 'active_user'])->group(function () {
     Route::get('/my-books', [MyBooksController::class, 'index'])->name('my-books.index');
     Route::resource('shelves', ShelfController::class)->except(['index', 'show']);
+    Route::post('/shelves/custom', [ShelfController::class, 'storeCustom'])->name('shelves.custom.store');
+    Route::patch('/shelves/date-read/{bookId}', [ShelfController::class, 'updateDateRead'])->name('shelves.date-read.update');
+    Route::delete('/shelves/remove-book/{bookId}', [ShelfController::class, 'removeBook'])->name('shelves.remove-book');
     Route::resource('ratings', RatingController::class)->except(['index', 'show']);
     Route::resource('reviews', ReviewController::class)->except(['index', 'show']);
 

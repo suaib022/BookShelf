@@ -38,4 +38,18 @@ class UserProfileController extends Controller
             'user', 'stats', 'shelfCounts', 'reviews', 'favoriteGenres', 'followers', 'isOwnProfile', 'isFollowing'
         ));
     }
+
+    public function followers($username)
+    {
+        $user = User::where('username', $username)->firstOrFail();
+        $followers = $user->followers()->paginate(20);
+        return view('profile.followers', compact('user', 'followers'));
+    }
+
+    public function following($username)
+    {
+        $user = User::where('username', $username)->firstOrFail();
+        $following = $user->following()->paginate(20);
+        return view('profile.following', compact('user', 'following'));
+    }
 }
