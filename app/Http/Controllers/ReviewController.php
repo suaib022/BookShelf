@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ActivityEvent;
 use App\Models\Review;
 use App\Models\Rating;
 use App\Models\Book;
@@ -30,7 +31,7 @@ class ReviewController extends Controller
                         ->first();
 
         // Prevent duplicate review — update if already exists
-        Review::updateOrCreate(
+        $review = Review::updateOrCreate(
             ['user_id' => $user->id, 'book_id' => $bookId],
             [
                 'body'              => $request->input('body'),
@@ -38,6 +39,15 @@ class ReviewController extends Controller
                 'rating_id'         => $rating?->id,
             ]
         );
+
+        if ($review->wasRecentlyCreated) {
+            ActivityEvent::create([
+                'user_id' => $user->id,
+                'type'    => 'review',
+                'book_id' => $bookId,
+                'metadata' => ['spoilers' => $review->contains_spoilers],
+            ]);
+        }
 
         return back()->with('success', 'Your review has been saved.');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ActivityEvent;
 use App\Models\Book;
 use App\Models\Rating;
 
@@ -31,6 +32,15 @@ class RatingController extends Controller
         // Recalculate book aggregate stats
         $book = Book::findOrFail($bookId);
         $book->updateAvgRating();
+
+        if ($rating->wasRecentlyCreated || $rating->wasChanged('stars')) {
+            ActivityEvent::create([
+                'user_id' => $user->id,
+                'type'    => 'rate',
+                'book_id' => $bookId,
+                'metadata' => ['stars' => $stars],
+            ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
