@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Shelf;
 use App\Models\ShelfBook;
+use App\Models\ActivityEvent;
 
 class ShelfController extends Controller
 {
@@ -59,6 +60,13 @@ class ShelfController extends Controller
             'shelf_id' => $shelf->id,
             'book_id'  => $bookId,
             'user_id'  => $user->id,
+        ]);
+
+        ActivityEvent::create([
+            'user_id' => $user->id,
+            'type'    => 'shelve',
+            'book_id' => $bookId,
+            'metadata' => ['shelf' => $shelfName],
         ]);
 
         return back()->with('success', "Moved to \"{$shelf->name}\"");
