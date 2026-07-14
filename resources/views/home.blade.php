@@ -37,7 +37,7 @@
                             </button>
                         </form>
                         <div class="flex gap-3 text-xs">
-                            <a href="#" class="text-[#00635D] hover:underline font-medium">Recommendations</a>
+                            <a href="{{ route('recommendations.index') }}" class="text-[#00635D] hover:underline font-medium">Recommendations</a>
                         </div>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                             </div>
                         @endif
                         <div class="flex gap-3 text-xs mb-1">
-                            <a href="#" class="text-[#00635D] hover:underline font-medium">Recommendations</a>
+                            <a href="{{ route('recommendations.index') }}" class="text-[#00635D] hover:underline font-medium">Recommendations</a>
                         </div>
                     </div>
                 </div>
@@ -265,6 +265,29 @@
                 <hr class="border-[#DDD8CC]" />
                 
                 @auth
+                @if(isset($recommendations) && $recommendations->isNotEmpty())
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555]">Recommended for You</h3>
+                        <a href="{{ route('recommendations.index') }}" class="text-[10px] text-[#00635D] hover:underline uppercase tracking-widest font-bold">See all</a>
+                    </div>
+                    <div class="space-y-4">
+                        @foreach($recommendations as $rec)
+                        <div class="flex items-start gap-3">
+                            <a href="{{ route('books.show', $rec->book) }}" class="shrink-0">
+                                <img src="{{ $rec->book->cover_url ? (filter_var($rec->book->cover_url, FILTER_VALIDATE_URL) ? $rec->book->cover_url : Storage::url($rec->book->cover_url)) : 'https://placehold.co/48x72?text=No+Cover' }}" class="w-12 h-[72px] object-cover rounded shadow-sm" alt="Cover">
+                            </a>
+                            <div class="min-w-0">
+                                <a href="{{ route('books.show', $rec->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $rec->book->title }}</a>
+                                <p class="text-[10px] text-[#888] mt-0.5 line-clamp-2 leading-snug">{{ $rec->reason }}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                
+                <hr class="border-[#DDD8CC]" />
+                @endif
                 <div class="p-4">
                     <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Improve Recommendations</h3>
                     <p class="text-xs text-[#666] mb-3 leading-relaxed">

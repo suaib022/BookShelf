@@ -34,7 +34,23 @@ class HomeController extends Controller
                 ->latest()
                 ->paginate(15);
                 
-            return view('home', compact('currentlyReadingBooks', 'wantToReadBooks', 'shelfCounts', 'activityEvents'));
+            $recommendations = \Illuminate\Support\Facades\DB::table('recommendations')
+                ->join('books', 'recommendations.book_id', '=', 'books.id')
+                ->where('recommendations.user_id', $user->id)
+                ->orderByDesc('recommendations.score')
+                ->select('books.*', 'recommendations.reason')
+                ->limit(2)
+                ->get();
+                
+            if ($recommendations->isNotEmpty()) {
+                $bookIds = $recommendations->pluck('id');
+                $recommendedBooks = \App\Models\Book::with('authors')->whereIn('id', $bookIds)->get()->keyBy('id');
+                foreach ($recommendations as $rec) {
+                    $rec->book = $recommendedBooks[$rec->id] ?? null;
+                }
+            }
+                
+            return view('home', compact('currentlyReadingBooks', 'wantToReadBooks', 'shelfCounts', 'activityEvents', 'recommendations'));
         }
         
         return view('home');

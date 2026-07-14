@@ -49,6 +49,8 @@ Route::middleware(['auth', 'active_user'])->group(function () {
 
     Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');
+
+    Route::get('/recommendations', [\App\Http\Controllers\RecommendationController::class, 'index'])->name('recommendations.index');
 });
 
 Route::resource('shelves', ShelfController::class)->only(['index', 'show']);
