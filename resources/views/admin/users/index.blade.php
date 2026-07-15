@@ -79,20 +79,19 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('profile.show', $user->username) }}" class="inline-block px-3 py-1 text-xs font-semibold text-[#00635D] border border-[#00635D] rounded hover:bg-[#00635D] hover:text-white transition-colors mr-2">View</a>
-                            <!-- Note: Actual ban/unban logic to be wired up in Step 18 -->
+                            <a href="{{ route('admin.users.show', $user) }}" class="inline-block px-3 py-1 text-xs font-semibold text-[#00635D] border border-[#00635D] rounded hover:bg-[#00635D] hover:text-white transition-colors mr-2">View</a>
                             @if(auth()->id() !== $user->id)
                                 @if($user->is_banned)
-                                    <form action="#" method="POST" class="inline-block" onsubmit="return confirm('Unban this user?');">
+                                    <form action="{{ route('admin.users.unban', $user) }}" method="POST" class="inline-block" onsubmit="return confirm('Unban this user?');">
                                         @csrf
                                         @method('PUT')
-                                        <button type="button" class="px-3 py-1 text-xs font-semibold text-[#5C7A3E] border border-[#5C7A3E] rounded hover:bg-[#5C7A3E] hover:text-white transition-colors cursor-not-allowed opacity-50" title="Will be implemented in Step 18">Unban</button>
+                                        <button type="submit" class="px-3 py-1 text-xs font-semibold text-[#5C7A3E] border border-[#5C7A3E] rounded hover:bg-[#5C7A3E] hover:text-white transition-colors">Unban</button>
                                     </form>
                                 @else
-                                    <form action="#" method="POST" class="inline-block" onsubmit="return confirm('Ban this user?');">
+                                    <form action="{{ route('admin.users.ban', $user) }}" method="POST" class="inline-block" onsubmit="return confirm('Ban this user?');">
                                         @csrf
                                         @method('PUT')
-                                        <button type="button" class="px-3 py-1 text-xs font-semibold text-red-600 border border-red-600 rounded hover:bg-red-600 hover:text-white transition-colors cursor-not-allowed opacity-50" title="Will be implemented in Step 18">Ban</button>
+                                        <button type="submit" class="px-3 py-1 text-xs font-semibold text-red-600 border border-red-600 rounded hover:bg-red-600 hover:text-white transition-colors">Ban</button>
                                     </form>
                                 @endif
                             @endif

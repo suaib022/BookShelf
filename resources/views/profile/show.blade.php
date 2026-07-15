@@ -17,12 +17,6 @@
                     @endif
                 </div>
                 <div class="space-y-1.5">
-                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
-                        {{ $stats['ratings'] }} ratings ({{ number_format($stats['avgRating'], 1) }} avg)
-                    </a>
-                    <a href="#" class="block text-sm text-[#00635D] hover:underline">
-                        {{ $stats['reviews'] }} reviews
-                    </a>
                     <div class="text-sm">
                         <a href="{{ route('profile.followers', $user->username) }}" class="text-[#00635D] hover:underline">
                             {{ $stats['followers'] }} followers
@@ -120,14 +114,14 @@
                                 <hr class="border-[#EDE9E0] mb-4" />
                             @endif
                             <div class="flex gap-3">
-                                <img src="{{ $review->book->cover_url ? Storage::url($review->book->cover_url) : 'https://placehold.co/48x72?text=No+Cover' }}" alt="{{ $review->book->title }}" class="w-12 h-[72px] rounded shadow-sm shrink-0 object-cover">
+                                <img src="{{ $review->book->cover_url ? (filter_var($review->book->cover_url, FILTER_VALIDATE_URL) ? $review->book->cover_url : Storage::url($review->book->cover_url)) : 'https://placehold.co/48x72?text=No+Cover' }}" alt="{{ $review->book->title }}" class="w-12 h-[72px] rounded shadow-sm shrink-0 object-cover">
                                 <div class="flex-1 min-w-0">
                                     <a href="{{ route('books.show', $review->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $review->book->title }}</a>
                                     <p class="text-xs text-[#888] mb-1.5">by {{ $review->book->authors->first()->name ?? 'Unknown' }}</p>
                                     <div class="flex items-center gap-2 mb-2">
                                         <div class="flex items-center gap-0.5">
                                             @for($i = 1; $i <= 5; $i++)
-                                                <svg class="w-3 h-3 {{ $i <= $review->rating ? 'fill-[#F5A623] text-[#F5A623]' : 'text-[#D8D2C8]' }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <svg class="w-3 h-3 {{ $i <= ($review->rating?->stars ?? 0) ? 'fill-[#F5A623] text-[#F5A623]' : 'text-[#D8D2C8]' }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                                             @endfor
                                         </div>
                                     </div>
