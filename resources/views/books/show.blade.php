@@ -292,7 +292,7 @@
                           @auth
                             @if(auth()->id() !== $review->user_id)
                                 @php
-                                    $isFollowing = \DB::table('follows')->where('follower_id', auth()->id())->where('following_id', $review->user_id)->exists();
+                                    $isFollowing = \DB::table('follows')->where('follower_id', auth()->id())->where('followee_id', $review->user_id)->exists();
                                 @endphp
                                 @if($isFollowing)
                                     <form action="{{ route('users.unfollow', $review->user_id) }}" method="POST" class="inline">
@@ -362,6 +362,19 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>
                             <span>{{ $review->comments_count ?? 0 }}</span>
                           </button>
+                          @auth
+                            @if(auth()->id() !== $review->user_id)
+                                <form action="{{ route('reports.store') }}" method="POST" class="ml-auto inline">
+                                    @csrf
+                                    <input type="hidden" name="reportable_type" value="review">
+                                    <input type="hidden" name="reportable_id" value="{{ $review->id }}">
+                                    <input type="hidden" name="reason" value="Inappropriate content">
+                                    <button type="submit" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors" title="Report Review" onclick="return confirm('Report this review?');">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
+                                    </button>
+                                </form>
+                            @endif
+                          @endauth
                         </div>
 
                         {{-- Comments Section --}}
@@ -376,6 +389,14 @@
                                                 <form action="{{ route('reviews.comments.destroy', $comment->id) }}" method="POST" class="inline">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="text-red-500 hover:underline">Delete</button>
+                                                </form>
+                                            @else
+                                                <form action="{{ route('reports.store') }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <input type="hidden" name="reportable_type" value="comment">
+                                                    <input type="hidden" name="reportable_id" value="{{ $comment->id }}">
+                                                    <input type="hidden" name="reason" value="Inappropriate content">
+                                                    <button type="submit" class="text-gray-400 hover:text-red-500 hover:underline" title="Report Comment" onclick="return confirm('Report this comment?');">Report</button>
                                                 </form>
                                             @endif
                                         </div>
