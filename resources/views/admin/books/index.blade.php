@@ -28,6 +28,15 @@
         </a>
     </div>
 
+    <div class="mb-6 flex justify-between items-center">
+        <form action="{{ route('admin.books.index') }}" method="GET" class="flex gap-2 w-full max-w-md">
+            <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search books by title, author, isbn..." class="flex-1 border border-[#DDD8CC] rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-[#00635D] focus:ring-1 focus:ring-[#00635D]">
+            <button type="submit" class="bg-[#F4F1EA] text-[#555] px-3 py-1.5 rounded-md border border-[#DDD8CC] hover:bg-[#DDD8CC] transition-colors text-sm font-semibold">Search</button>
+            @if(request()->has('search'))
+                <a href="{{ route('admin.books.index') }}" class="text-[#00635D] text-sm hover:underline ml-2 self-center">Clear</a>
+            @endif
+        </form>
+    </div>
 
         <div class="bg-white rounded-md shadow-sm border border-[#DDD8CC] overflow-hidden">
             <table class="w-full text-left border-collapse">

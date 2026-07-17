@@ -15,7 +15,7 @@
                         @if($currentlyReadingBooks->isNotEmpty())
                             @foreach($currentlyReadingBooks as $shelfBook)
                             <div class="flex items-center gap-3 mb-3">
-                                <img src="{{ $shelfBook->book->cover_url ? Storage::url($shelfBook->book->cover_url) : 'https://placehold.co/40x48?text=No+Cover' }}" class="w-10 h-12 object-cover rounded shrink-0 shadow-sm" alt="Cover">
+                                <img src="{{ $shelfBook->book->cover_url ? (filter_var($shelfBook->book->cover_url, FILTER_VALIDATE_URL) ? $shelfBook->book->cover_url : Storage::url($shelfBook->book->cover_url)) : 'https://placehold.co/40x48?text=No+Cover' }}" class="w-10 h-12 object-cover rounded shrink-0 shadow-sm" alt="Cover">
                                 <div>
                                     <a href="{{ route('books.show', $shelfBook->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $shelfBook->book->title }}</a>
                                     <p class="text-xs text-[#777] mt-0.5">by {{ $shelfBook->book->authors->first()->name ?? 'Unknown' }}</p>
@@ -45,7 +45,7 @@
                 <hr class="border-[#DDD8CC]" />
 
                 <!-- Reading Challenge -->
-                <div class="py-4">
+                <!-- <div class="py-4">
                     <div class="px-4">
                         <h3 class="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Reading Challenge</h3>
                         <div class="flex items-center gap-3">
@@ -58,7 +58,7 @@
                             </button>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <hr class="border-[#DDD8CC]" />
 
@@ -69,7 +69,7 @@
                         @if($wantToReadBooks->isNotEmpty())
                             @foreach($wantToReadBooks->take(3) as $shelfBook)
                                 <div class="flex items-center gap-3 mb-3">
-                                    <img src="{{ $shelfBook->book->cover_url ? Storage::url($shelfBook->book->cover_url) : 'https://placehold.co/40x48?text=No+Cover' }}" class="w-10 h-12 object-cover rounded shrink-0 shadow-sm" alt="Cover">
+                                    <img src="{{ $shelfBook->book->cover_url ? (filter_var($shelfBook->book->cover_url, FILTER_VALIDATE_URL) ? $shelfBook->book->cover_url : Storage::url($shelfBook->book->cover_url)) : 'https://placehold.co/40x48?text=No+Cover' }}" class="w-10 h-12 object-cover rounded shrink-0 shadow-sm" alt="Cover">
                                     <div class="min-w-0">
                                         <a href="{{ route('books.show', $shelfBook->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block truncate">{{ $shelfBook->book->title }}</a>
                                         <p class="text-xs text-[#777] mt-0.5">by {{ $shelfBook->book->authors->first()->name ?? 'Unknown' }}</p>
@@ -181,7 +181,7 @@
 
                         @if($event->book)
                         <div class="mt-3 ml-10 bg-[#FBF9F3] border border-[#E8E2D4] rounded-md p-3 flex gap-3">
-                            <img src="{{ $event->book->cover_url ? Storage::url($event->book->cover_url) : 'https://placehold.co/64x96?text=No+Cover' }}" alt="{{ $event->book->title }}" class="w-16 h-24 object-cover rounded shrink-0 shadow-sm">
+                            <img src="{{ $event->book->cover_url ? (filter_var($event->book->cover_url, FILTER_VALIDATE_URL) ? $event->book->cover_url : Storage::url($event->book->cover_url)) : 'https://placehold.co/64x96?text=No+Cover' }}" alt="{{ $event->book->title }}" class="w-16 h-24 object-cover rounded shrink-0 shadow-sm">
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('books.show', $event->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $event->book->title }}</a>
                                 <p class="text-xs text-[#777] mb-2">by {{ $event->book->authors->first()->name ?? 'Unknown' }}</p>
@@ -194,7 +194,12 @@
                                             <svg class="w-[11px] h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </button>
                                         <div x-show="open" @click.away="open = false" style="display: none;" class="absolute top-full left-0 mt-1 bg-white border border-[#DDD8CC] rounded shadow-lg py-1 min-w-[150px] z-20">
-                                            @foreach(['Read', 'Currently Reading', 'Want to Read'] as $shelf)
+                                            @php
+                                                $defaultOptions = ['Read', 'Currently Reading', 'Want to Read', 'Did Not Finish'];
+                                                $customShelves = auth()->check() ? \App\Models\Shelf::where('user_id', auth()->id())->whereNotIn('name', $defaultOptions)->pluck('name')->toArray() : [];
+                                                $allOptions = array_merge($defaultOptions, $customShelves);
+                                            @endphp
+                                            @foreach($allOptions as $shelf)
                                             <form action="{{ route('shelves.store') }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="book_id" value="{{ $event->book->id }}">

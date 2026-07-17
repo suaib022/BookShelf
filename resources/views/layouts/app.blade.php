@@ -71,7 +71,7 @@
                         </a>
                       </div>
                     </li>
-                    <li class="relative">
+                    <!-- <li class="relative">
                       <button
                         class="flex items-center gap-0.5 px-3 py-1.5 text-sm rounded transition-colors text-[#333] hover:text-[#00635D] hover:bg-[#F4F1EA]"
                         @click="openDropdown = openDropdown === 'Community' ? null : 'Community'"
@@ -86,7 +86,7 @@
                             </a>
                         @endforeach
                       </div>
-                    </li>
+                    </li> -->
                 </ul>
 
                 <!-- Search -->

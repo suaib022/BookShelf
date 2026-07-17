@@ -3,118 +3,128 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ShelfBook;
+use Illuminate\Support\Str;
 
 class MyBooksController extends Controller
 {
-    /**
-     * Display the "My Books" (formerly My Shelves) page.
-     * Sidebar shows all shelves with counts. Table supports:
-     *   - shelf filter via ?shelf=
-     *   - sorting via ?sort= (title|author|avg_rating|date_read|date_added)
-     *   - direction via ?dir= (asc|desc)
-     *   - per-page via ?per_page= (10|20|50|100)
-     * Data is currently placeholder; real queries wired in a later step.
-     */
     public function index(Request $request)
     {
-        // ── Dummy shelf list (sidebar) ────────────────────────────────────
+        $user = $request->user();
+
+        // ── Shelf list (sidebar) ────────────────────────────────────
+        $dbShelves = $user->shelves()->withCount('shelfBooks')->get();
+        $allCount = ShelfBook::where('user_id', $user->id)->count();
+
+        $defaultNames = ['Want to Read', 'Currently Reading', 'Read', 'Did Not Finish'];
+        $shelvesMap = [];
+        
+        foreach ($defaultNames as $name) {
+            $shelvesMap[$name] = [
+                'id' => null,
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'count' => 0,
+                'is_custom' => false
+            ];
+        }
+
+        foreach ($dbShelves as $ds) {
+            $isDefault = in_array($ds->name, $defaultNames);
+            $shelvesMap[$ds->name] = [
+                'id' => $ds->id,
+                'name' => $ds->name,
+                'slug' => Str::slug($ds->name),
+                'count' => $ds->shelf_books_count,
+                'is_custom' => !$isDefault
+            ];
+        }
+
         $shelves = [
-            ['name' => 'All',               'slug' => 'all',               'count' => 5],
-            ['name' => 'Want to Read',       'slug' => 'want-to-read',       'count' => 1],
-            ['name' => 'Currently Reading',  'slug' => 'currently-reading',  'count' => 2],
-            ['name' => 'Read',               'slug' => 'read',               'count' => 1],
-            ['name' => 'Did Not Finish',     'slug' => 'did-not-finish',     'count' => 1],
+            ['id' => null, 'name' => 'All', 'slug' => 'all', 'count' => $allCount, 'is_custom' => false],
         ];
+
+        foreach ($shelvesMap as $s) {
+            $shelves[] = $s;
+        }
 
         $activeShelf = $request->input('shelf', 'all');
 
-        // ── Dummy book rows ────────────────────────────────────────────────
-        $books = [
-            [
-                'id'           => 1,
-                'cover'        => 'https://covers.openlibrary.org/b/id/8739161-M.jpg',
-                'title'        => "Rome's Age of Revolution",
-                'author'       => 'Whitmarsh, Tim',
-                'avg_rating'   => 4.50,
-                'my_rating'    => 0,
-                'shelf'        => 'did-not-finish',
-                'shelf_label'  => 'did-not-finish',
-                'review'       => null,
-                'date_read'    => null,
-                'date_added'   => '2026-07-17',
-            ],
-            [
-                'id'           => 2,
-                'cover'        => 'https://covers.openlibrary.org/b/id/10909258-M.jpg',
-                'title'        => 'The God Test: Artificial Intelligence and Our Coming Cosmic Reckoning',
-                'author'       => 'Wright, Robert',
-                'avg_rating'   => 4.18,
-                'my_rating'    => 0,
-                'shelf'        => 'read',
-                'shelf_label'  => 'read',
-                'review'       => null,
-                'date_read'    => null,
-                'date_added'   => '2026-07-17',
-            ],
-            [
-                'id'           => 3,
-                'cover'        => 'https://covers.openlibrary.org/b/id/14816042-M.jpg',
-                'title'        => 'DC Finest: Robin: The Origin of Robin',
-                'author'       => 'Friedrich, Mike',
-                'avg_rating'   => 4.00,
-                'my_rating'    => 0,
-                'shelf'        => 'currently-reading',
-                'shelf_label'  => 'currently-reading',
-                'review'       => null,
-                'date_read'    => null,
-                'date_added'   => '2026-07-17',
-            ],
-            [
-                'id'           => 4,
-                'cover'        => 'https://covers.openlibrary.org/b/id/14635072-M.jpg',
-                'title'        => 'Empire of AI: Dreams and Nightmares in Sam Altman\'s OpenAI',
-                'author'       => 'Hao, Karen',
-                'avg_rating'   => 4.02,
-                'my_rating'    => 0,
-                'shelf'        => 'currently-reading',
-                'shelf_label'  => 'currently-reading',
-                'review'       => null,
-                'date_read'    => null,
-                'date_added'   => '2026-07-17',
-            ],
-            [
-                'id'           => 5,
-                'cover'        => 'https://covers.openlibrary.org/b/id/14888823-M.jpg',
-                'title'        => "Breakneck: China's Quest to Engineer the Future",
-                'author'       => 'Wang, Dan',
-                'avg_rating'   => 4.09,
-                'my_rating'    => 0,
-                'shelf'        => 'want-to-read',
-                'shelf_label'  => 'to-read',
-                'review'       => null,
-                'date_read'    => null,
-                'date_added'   => '2026-07-17',
-            ],
-        ];
+        // ── Book rows ────────────────────────────────────────────────
+        $query = ShelfBook::select('shelf_books.*')
+            ->where('shelf_books.user_id', $user->id)
+            ->join('books', 'shelf_books.book_id', '=', 'books.id')
+            ->with([
+                'book.authors',
+                'shelf',
+                'book.reviews' => function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                },
+                'book.ratings' => function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                }
+            ]);
 
-        // Filter by active shelf
         if ($activeShelf !== 'all') {
-            $books = array_filter($books, fn($b) => $b['shelf'] === $activeShelf);
+            $shelfMatch = collect($shelves)->first(fn($s) => $s['slug'] === $activeShelf);
+            if ($shelfMatch && $shelfMatch['id']) {
+                $query->where('shelf_books.shelf_id', $shelfMatch['id']);
+            } else {
+                $query->where('shelf_books.shelf_id', 0); // Not found
+            }
         }
 
         // Sorting
         $sort = $request->input('sort', 'date_added');
         $dir  = $request->input('dir', 'desc');
-        usort($books, function ($a, $b) use ($sort, $dir) {
-            $valA = $a[$sort] ?? '';
-            $valB = $b[$sort] ?? '';
-            $cmp  = strcmp((string) $valA, (string) $valB);
-            return $dir === 'asc' ? $cmp : -$cmp;
+
+        if ($sort === 'title') {
+            $query->orderBy('books.title', $dir);
+        } elseif ($sort === 'author') {
+            // Simplified sorting for author: join first author
+            $query->leftJoin('book_author', function ($join) {
+                $join->on('books.id', '=', 'book_author.book_id')
+                     ->whereRaw('book_author.id = (select min(id) from book_author where book_id = books.id)');
+            })
+            ->leftJoin('authors', 'book_author.author_id', '=', 'authors.id')
+            ->orderBy('authors.name', $dir);
+        } elseif ($sort === 'avg_rating') {
+            $query->orderBy('books.avg_rating', $dir);
+        } elseif ($sort === 'date_read') {
+            $query->orderBy('shelf_books.date_finished', $dir);
+        } else {
+            // default: date_added
+            $query->orderBy('shelf_books.created_at', $dir);
+        }
+
+        $perPage = (int) $request->input('per_page', 20);
+        $perPage = in_array($perPage, [10, 20, 50, 100]) ? $perPage : 20;
+
+        $paginator = $query->paginate($perPage)->withQueryString();
+
+        // Transform for view
+        $books = $paginator->getCollection()->map(function ($sb) {
+            $b = $sb->book;
+            $rating = $b->ratings->first();
+            $review = $b->reviews->first();
+            return [
+                'id'           => $b->id,
+                'cover'        => $b->cover_url ? (filter_var($b->cover_url, FILTER_VALIDATE_URL) ? $b->cover_url : \Storage::url($b->cover_url)) : null,
+                'title'        => $b->title,
+                'author'       => $b->authors->pluck('name')->join(', '),
+                'avg_rating'   => $b->avg_rating,
+                'my_rating'    => $rating ? $rating->stars : 0,
+                'shelf'        => $sb->shelf ? $sb->shelf->name : '',
+                'shelf_label'  => $sb->shelf ? $sb->shelf->name : '',
+                'review'       => $review ? $review->body : null,
+                'review_id'    => $review ? $review->id : null,
+                'date_read'    => $sb->date_finished ? \Carbon\Carbon::parse($sb->date_finished)->format('M j, Y') : null,
+                'date_added'   => $sb->created_at,
+            ];
         });
 
-        // Per page (just for display — no real pagination with dummy data)
-        $perPage = (int) $request->input('per_page', 20);
+        $paginator->setCollection($books);
 
-        return view('my-books.index', compact('shelves', 'books', 'activeShelf', 'sort', 'dir', 'perPage'));
+        return view('my-books.index', compact('shelves', 'paginator', 'activeShelf', 'sort', 'dir', 'perPage'));
     }
 }

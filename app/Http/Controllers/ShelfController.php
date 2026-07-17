@@ -73,6 +73,23 @@ class ShelfController extends Controller
     }
 
     /**
+     * Create a custom shelf without a book.
+     */
+    public function storeCustom(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+        ]);
+
+        $request->user()->shelves()->firstOrCreate(
+            ['name' => $request->input('name')],
+            ['is_default' => false]
+        );
+
+        return back()->with('success', 'Shelf created successfully.');
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(string $id)

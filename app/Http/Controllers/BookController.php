@@ -135,6 +135,25 @@ class BookController extends Controller
             ? optional(\App\Models\Rating::where('user_id', auth()->id())->where('book_id', $book->id)->first())->stars
             : null;
 
+        $userShelfName = null;
+        $customShelves = [];
+        if (auth()->check()) {
+            $userShelf = \DB::table('shelf_books')
+                ->join('shelves', 'shelf_books.shelf_id', '=', 'shelves.id')
+                ->where('shelf_books.book_id', $book->id)
+                ->where('shelf_books.user_id', auth()->id())
+                ->select('shelves.name')
+                ->first();
+            if ($userShelf) {
+                $userShelfName = $userShelf->name;
+            }
+
+            $customShelves = \App\Models\Shelf::where('user_id', auth()->id())
+                ->whereNotIn('name', ['Want to Read', 'Currently Reading', 'Read', 'Did Not Finish'])
+                ->pluck('name')
+                ->toArray();
+        }
+
         return view('books.show', compact(
             'book', 
             'currentlyReadingCount', 
@@ -143,7 +162,9 @@ class BookController extends Controller
             'relatedBooks', 
             'followingReviews', 
             'reviews',
-            'userRating'
+            'userRating',
+            'userShelfName',
+            'customShelves'
         ));
     }
 }

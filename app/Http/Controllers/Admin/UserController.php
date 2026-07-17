@@ -38,13 +38,18 @@ class UserController extends Controller
         });
 
         // Get recent shelf additions
-        $shelfBooks = $user->books()->withPivot('status', 'created_at')->orderByPivot('created_at', 'desc')->take(10)->get()->map(function ($book) {
+        $shelfBooks = \App\Models\ShelfBook::where('user_id', $user->id)
+            ->with(['book', 'shelf'])
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($shelfBook) {
             return [
                 'type' => 'shelf',
-                'title' => 'Shelved: ' . $book->title,
-                'content' => 'Status: ' . ucfirst($book->pivot->status),
-                'date' => $book->pivot->created_at,
-                'url' => route('books.show', $book)
+                'title' => 'Shelved: ' . $shelfBook->book->title,
+                'content' => 'Shelf: ' . ($shelfBook->shelf->name ?? 'Unknown'),
+                'date' => $shelfBook->created_at,
+                'url' => route('books.show', $shelfBook->book)
             ];
         });
 

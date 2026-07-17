@@ -17,12 +17,26 @@
               <form action="{{ route('shelves.store') }}" method="POST" class="relative group" x-data="{ open: false }">
                 @csrf
                 <input type="hidden" name="book_id" value="{{ $book->id }}">
-                <button type="button" @click="open = !open" @click.away="open = false" class="w-full flex items-center justify-between bg-[#3c6138] hover:bg-[#2e4d2b] text-white text-sm font-semibold px-4 py-2.5 rounded transition-colors duration-150">
-                  <span>Shelve</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <button type="button" @click="open = !open" @click.away="open = false" 
+                        class="w-full flex items-center justify-between text-sm font-semibold px-4 py-2.5 rounded transition-colors duration-150 {{ $userShelfName ? 'bg-white border-2 border-gray-500 text-gray-800 rounded-full hover:bg-gray-50 py-2' : 'bg-[#3c6138] hover:bg-[#2e4d2b] text-white' }}">
+                  <div class="flex items-center gap-1.5 justify-center flex-1">
+                    @if($userShelfName)
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                      <span class="font-bold">{{ $userShelfName }}</span>
+                    @else
+                      <span>Shelve</span>
+                    @endif
+                  </div>
+                  @if(!$userShelfName)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  @endif
                 </button>
                 <div x-show="open" style="display: none;" class="absolute left-0 right-0 top-full mt-1 bg-white border border-[#e8e0d5] rounded shadow-lg z-10 py-1">
-                  @foreach(['Want to Read', 'Currently Reading', 'Read'] as $shelfName)
+                  @php
+                      $defaultOptions = ['Want to Read', 'Currently Reading', 'Read', 'Did Not Finish'];
+                      $allOptions = array_merge($defaultOptions, $customShelves ?? []);
+                  @endphp
+                  @foreach($allOptions as $shelfName)
                     <button type="submit" name="shelf_name" value="{{ $shelfName }}" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#F4F1EA] transition-colors">
                       {{ $shelfName }}
                     </button>

@@ -47,13 +47,13 @@
                     Password
                 </label>
                 @if (Route::has('password.request'))
-                    <a
+                    <!-- <a
                       href="{{ route('password.request') }}"
                       class="text-sm text-gray-500 underline hover:text-black transition-colors"
                       style="font-family: 'Inter', sans-serif"
                     >
                         Password assistance
-                    </a>
+                    </a> -->
                 @endif
             </div>
             <div class="relative w-full">
@@ -83,7 +83,7 @@
         </button>
         
         <!-- Keep me signed in -->
-        <div class="flex items-center gap-2 mt-2" style="font-family: 'Inter', sans-serif">
+        <!-- <div class="flex items-center gap-2 mt-2" style="font-family: 'Inter', sans-serif">
           <input
             id="remember_me"
             name="remember"
@@ -96,7 +96,7 @@
           <a href="#" class="text-sm text-gray-500 underline hover:text-black transition-colors">
             Details
           </a>
-        </div>
+        </div> -->
     </form>
 
     <!-- Terms -->
