@@ -292,8 +292,8 @@
                 @foreach($reviews as $review)
                     <div class="flex gap-4" x-data="{ expanded: false }">
                       <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500 font-bold uppercase overflow-hidden">
-                        @if($review->user->avatar)
-                            <img src="{{ filter_var($review->user->avatar, FILTER_VALIDATE_URL) ? $review->user->avatar : Storage::url($review->user->avatar) }}" alt="{{ $review->user->name }}" class="w-full h-full object-cover">
+                        @if($review->user->avatar_url)
+                            <img src="{{ filter_var($review->user->avatar_url, FILTER_VALIDATE_URL) ? $review->user->avatar_url : Storage::url($review->user->avatar_url) }}" alt="{{ $review->user->name }}" class="w-full h-full object-cover">
                         @else
                             {{ substr($review->user->name, 0, 1) }}
                         @endif

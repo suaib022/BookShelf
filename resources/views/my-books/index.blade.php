@@ -205,8 +205,9 @@
                             {{-- Review --}}
                             <td class="py-3 pr-3" x-data="{ reviewOpen: false }">
                                 @if($book['review'])
-                                    <button @click="reviewOpen = true" class="text-[#00635D] hover:underline text-xs">view »</button>
-                                    <br>
+                                    <div class="text-xs text-[#555] mb-1 line-clamp-2" title="{{ $book['review'] }}">
+                                        {{ $book['review'] }}
+                                    </div>
                                     <button @click="reviewOpen = true" class="text-[10px] text-[#00635D] hover:underline">[edit]</button>
                                 @else
                                     <button @click="reviewOpen = true" class="text-[#00635D] hover:underline text-xs whitespace-nowrap">Write a review</button>

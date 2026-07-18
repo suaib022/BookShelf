@@ -117,7 +117,7 @@
                           >
                             @if(auth()->user()->avatar_url)
                                 <img
-                                  src="{{ Storage::url(auth()->user()->avatar_url) }}"
+                                  src="{{ filter_var(auth()->user()->avatar_url, FILTER_VALIDATE_URL) ? auth()->user()->avatar_url : Storage::url(auth()->user()->avatar_url) }}"
                                   alt="Profile"
                                   class="w-full h-full object-cover"
                                 />
