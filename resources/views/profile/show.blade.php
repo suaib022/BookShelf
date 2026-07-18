@@ -9,7 +9,7 @@
             <div class="flex flex-col items-center text-center">
                 <div class="w-[160px] h-[160px] rounded-full overflow-hidden border-4 border-white shadow-md mb-4">
                     @if($user->avatar_url)
-                        <img src="{{ Storage::url($user->avatar_url) }}" alt="{{ $user->username }}" class="w-full h-full object-cover" />
+                        <img src="{{ filter_var($user->avatar_url, FILTER_VALIDATE_URL) ? $user->avatar_url : Storage::url($user->avatar_url) }}" alt="{{ $user->username }}" class="w-full h-full object-cover" />
                     @else
                         <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-4xl">
                             {{ substr($user->username, 0, 1) }}
@@ -157,7 +157,7 @@
                         @forelse($followers as $follower)
                             <a href="{{ route('profile.show', $follower->username) }}" class="shrink-0" title="{{ $follower->username }}">
                                 @if($follower->avatar_url)
-                                    <img src="{{ Storage::url($follower->avatar_url) }}" alt="{{ $follower->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm hover:border-[#00635D] transition-colors" />
+                                    <img src="{{ filter_var($follower->avatar_url, FILTER_VALIDATE_URL) ? $follower->avatar_url : Storage::url($follower->avatar_url) }}" alt="{{ $follower->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm hover:border-[#00635D] transition-colors" />
                                 @else
                                     <div class="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-sm hover:border-[#00635D] transition-colors flex items-center justify-center text-gray-500 font-bold text-sm">
                                         {{ substr($follower->username, 0, 1) }}

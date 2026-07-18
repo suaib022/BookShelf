@@ -16,7 +16,7 @@
                     <div class="flex gap-3">
                         <a href="{{ route('profile.show', $event->user->username) }}" class="shrink-0">
                             @if($event->user->avatar_url)
-                                <img src="{{ Storage::url($event->user->avatar_url) }}" alt="{{ $event->user->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+                                <img src="{{ filter_var($event->user->avatar_url, FILTER_VALIDATE_URL) ? $event->user->avatar_url : Storage::url($event->user->avatar_url) }}" alt="{{ $event->user->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
                             @else
                                 <div class="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center text-gray-500 font-bold text-sm">
                                     {{ substr($event->user->username, 0, 1) }}

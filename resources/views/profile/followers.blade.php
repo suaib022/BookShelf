@@ -16,7 +16,7 @@
                     <div class="flex items-center gap-4">
                         <a href="{{ route('profile.show', $follower->username) }}">
                             @if($follower->avatar_url)
-                                <img src="{{ Storage::url($follower->avatar_url) }}" alt="{{ $follower->username }}" class="w-12 h-12 rounded-full object-cover border border-[#E8E6E0]">
+                                <img src="{{ filter_var($follower->avatar_url, FILTER_VALIDATE_URL) ? $follower->avatar_url : Storage::url($follower->avatar_url) }}" alt="{{ $follower->username }}" class="w-12 h-12 rounded-full object-cover border border-[#E8E6E0]">
                             @else
                                 <div class="w-12 h-12 rounded-full bg-gray-200 border border-[#E8E6E0] flex items-center justify-center text-gray-500 font-bold">
                                     {{ substr($follower->username, 0, 1) }}

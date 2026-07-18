@@ -152,82 +152,51 @@
             <div class="space-y-3">
                 @if($activityEvents->isNotEmpty())
                     @foreach($activityEvents as $event)
-                    <article class="bg-white border border-[#DDD8CC] rounded-md p-4">
-                        <div class="flex items-start gap-3">
-                            @if($event->user->avatar_url)
-                                <img src="{{ Storage::url($event->user->avatar_url) }}" class="w-7 h-7 rounded-full object-cover shrink-0" alt="">
+                    @php
+                        $meta = $event->metadata ?? [];
+                        $hasStars = isset($meta['stars']);
+                        $hasBody = isset($meta['body']);
+                        $hasBoth = $hasStars && $hasBody;
+                        $actionWord = $hasBoth 
+                            ? ($event->type === 'review' ? 'reviewed' : 'rated') 
+                            : ($event->type === 'review' ? 'reviewed' : 'rated');
+                    @endphp
+                    <article class="bg-white border border-[#DDD8CC] rounded-md p-5 flex flex-col gap-3">
+                        <div class="text-[13px] text-[#777]">
+                            <span class="font-bold text-[#555]">{{ $event->user->username }}</span> 
+                            @if(\Carbon\Carbon::parse($event->created_at)->diffInDays(now()) < 3)
+                                recently {{ $hasBoth ? 'rated and reviewed' : $actionWord }} a book
                             @else
-                                <div class="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                                    <span class="text-gray-500 font-bold text-xs">{{ substr($event->user->username, 0, 1) }}</span>
-                                </div>
+                                {{ $hasBoth ? 'rated and reviewed' : $actionWord }} a book
                             @endif
-                            <p class="text-sm text-[#555] leading-relaxed pt-0.5">
-                                <a href="{{ route('profile.show', $event->user->username) }}" class="font-bold text-[#333] hover:underline">{{ $event->user->username }}</a>
-                                
-                                @if($event->type === 'rating' || $event->type === 'review')
-                                    rated a book
-                                    <span class="inline-flex items-center ml-1">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-3 h-3 {{ $i <= ($event->metadata['stars'] ?? 0) ? 'fill-[#F5A623] text-[#F5A623]' : 'text-[#D8D2C8]' }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    @endfor
-                                    </span>
-                                @elseif($event->type === 'shelf')
-                                    added a book to <strong>{{ $event->metadata['shelf'] ?? 'a shelf' }}</strong>
-                                @elseif($event->type === 'follow')
-                                    started following <a href="{{ $event->targetUser ? route('profile.show', $event->targetUser->username) : '#' }}" class="font-bold text-[#333] hover:underline">{{ $event->targetUser->username ?? 'someone' }}</a>
-                                @endif
-                            </p>
                         </div>
-
+                        
                         @if($event->book)
-                        <div class="mt-3 ml-10 bg-[#FBF9F3] border border-[#E8E2D4] rounded-md p-3 flex gap-3">
-                            <img src="{{ $event->book->cover_url ? (filter_var($event->book->cover_url, FILTER_VALIDATE_URL) ? $event->book->cover_url : Storage::url($event->book->cover_url)) : 'https://placehold.co/64x96?text=No+Cover' }}" alt="{{ $event->book->title }}" class="w-16 h-24 object-cover rounded shrink-0 shadow-sm">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ route('books.show', $event->book) }}" class="text-sm font-bold text-[#382110] hover:text-[#00635D] leading-tight block">{{ $event->book->title }}</a>
-                                <p class="text-xs text-[#777] mb-2">by {{ $event->book->authors->first()->name ?? 'Unknown' }}</p>
+                        <div class="flex gap-4">
+                            <img src="{{ $event->book->cover_url ? (filter_var($event->book->cover_url, FILTER_VALIDATE_URL) ? $event->book->cover_url : Storage::url($event->book->cover_url)) : 'https://placehold.co/64x96?text=No+Cover' }}" alt="{{ $event->book->title }}" class="object-cover border border-[#e8e0d5] shadow-sm shrink-0" style="width: 60px; height: 100px;">
+                            
+                            <div class="flex-1 min-w-0 flex flex-col">
+                                <a href="{{ route('books.show', $event->book) }}" class="text-xl font-bold text-[#382110] hover:text-[#00635D] leading-tight mb-1">{{ $event->book->title }}</a>
+                                <p class="text-sm text-[#777] mb-2">by {{ $event->book->authors->first()->name ?? 'Unknown' }}</p>
                                 
-                                <div class="flex items-center gap-3 mb-2" x-data="{ open: false }">
-                                    <!-- Simplified shelf dropdown for feed -->
-                                    <div class="relative">
-                                        <button @click="open = !open" class="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold hover:opacity-90 transition bg-[#E8E2D4] text-[#333]">
-                                            Want to Read
-                                            <svg class="w-[11px] h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        </button>
-                                        <div x-show="open" @click.away="open = false" style="display: none;" class="absolute top-full left-0 mt-1 bg-white border border-[#DDD8CC] rounded shadow-lg py-1 min-w-[150px] z-20">
-                                            @php
-                                                $defaultOptions = ['Read', 'Currently Reading', 'Want to Read', 'Did Not Finish'];
-                                                $customShelves = auth()->check() ? \App\Models\Shelf::where('user_id', auth()->id())->whereNotIn('name', $defaultOptions)->pluck('name')->toArray() : [];
-                                                $allOptions = array_merge($defaultOptions, $customShelves);
-                                            @endphp
-                                            @foreach($allOptions as $shelf)
-                                            <form action="{{ route('shelves.store') }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="book_id" value="{{ $event->book->id }}">
-                                                <input type="hidden" name="shelf" value="{{ $shelf }}">
-                                                <button type="submit" class="block w-full text-left px-3 py-1.5 text-xs text-[#333] hover:bg-[#F4F1EA] hover:text-[#00635D] transition-colors">
-                                                    {{ $shelf }}
-                                                </button>
-                                            </form>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="flex items-center gap-0.5">
-                                        @for($i = 1; $i <= 5; $i++)
-                                        <svg class="w-3 h-3 {{ $i <= round($event->book->avg_rating) ? 'fill-[#F5A623] text-[#F5A623]' : 'text-[#D8D2C8]' }}" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                        @endfor
-                                    </div>
+                                @if($hasStars)
+                                <div class="flex items-center gap-1 mb-3">
+                                    @for($i = 1; $i <= 5; $i++)
+                                    <svg class="w-4 h-4 {{ $i <= $meta['stars'] ? 'fill-[#F5A623] text-[#F5A623]' : 'fill-[#D8D2C8] text-[#D8D2C8]' }}" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                    @endfor
                                 </div>
+                                @endif
                                 
-                                @if($event->type === 'review' && isset($event->metadata['body']))
-                                <p class="text-xs text-[#555] leading-relaxed line-clamp-3">
-                                    {{ $event->metadata['body'] }}
-                                </p>
-                                @else
-                                <p class="text-xs text-[#555] leading-relaxed line-clamp-2">
-                                    {{ Str::limit($event->book->description, 100) }}
+                                @if($hasBody)
+                                <p class="text-[#555] text-sm leading-relaxed mb-3">
+                                    {{ $meta['body'] }}
                                 </p>
                                 @endif
+                                
+                                <div class="mt-auto pt-1 text-sm text-[#999] italic">
+                                    {{ \Carbon\Carbon::parse($event->created_at)->format('M d, Y') }} 
+                                    <span class="not-italic text-[#777]"> — {{ $hasBoth ? 'rated & reviewed' : ($event->type === 'review' ? 'reviewed' : 'rated') }} by <a href="{{ route('profile.show', $event->user->username) }}" class="font-bold text-[#555] hover:underline">{{ $event->user->username }}</a></span>
+                                </div>
                             </div>
                         </div>
                         @endif

@@ -115,19 +115,19 @@
                         <hr class="border-[#DDD8CC]" />
 
                         <!-- Private Profile -->
-                        <div class="flex items-start gap-4">
+                        <!-- <div class="flex items-start gap-4">
                             <label class="relative inline-flex items-center cursor-pointer mt-0.5 shrink-0">
                                 <input type="hidden" name="is_private" value="0">
                                 <input type="checkbox" name="is_private" value="1" class="sr-only peer" {{ old('is_private', $user->is_private) ? 'checked' : '' }}>
                                 <div class="w-9 h-5 bg-[#C8C0B0] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00635D]"></div>
                             </label>
                             <div>
-                                <p class="text-sm font-semibold text-[#382110] leading-tight">Private Profile</p>
+                                <p class= "text-sm font-semibold text-[#382110] leading-tight">Private Profile</p>
                                 <p class="text-xs text-[#888] mt-0.5 leading-relaxed">
                                     Only people who follow you can see your shelves and activity.
                                 </p>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="pt-2">
                             <button type="submit" class="bg-[#382110] text-white text-sm font-bold px-6 py-2.5 rounded hover:bg-[#2A180C] transition-colors">
@@ -145,7 +145,7 @@
                                 </template>
                                 <template x-if="!photoPreview">
                                     @if($user->avatar_url)
-                                        <img src="{{ Storage::url($user->avatar_url) }}" class="w-full h-full object-cover" />
+                                        <img src="{{ filter_var($user->avatar_url, FILTER_VALIDATE_URL) ? $user->avatar_url : Storage::url($user->avatar_url) }}" class="w-full h-full object-cover" />
                                     @else
                                         <div class="w-full h-full flex flex-col items-center justify-center text-gray-400">
                                             <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
