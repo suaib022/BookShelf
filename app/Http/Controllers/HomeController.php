@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ActivityEvent;
+use App\Services\RecommendationService;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(RecommendationService $recommendationService)
     {
         if (auth()->check()) {
             $user = auth()->user();
+            $recommendationService->generateForUser($user);
+
             
             $shelves = $user->shelves()->whereIn('name', ['Read', 'Currently Reading', 'Want to Read'])->get()->keyBy('name');
             
@@ -29,10 +32,45 @@ class HomeController extends Controller
             
             $followingIds = $user->following()->pluck('users.id');
             
-            $activityEvents = ActivityEvent::with(['user', 'book', 'targetUser'])
+            $allEvents = ActivityEvent::with(['user', 'book.authors', 'targetUser'])
                 ->whereIn('user_id', $followingIds)
+                ->whereIn('type', ['rating', 'review', 'rate'])
                 ->latest()
-                ->paginate(15);
+                ->get();
+            
+            // Merge rate+review for the same user+book into one card
+            $merged = [];
+            foreach ($allEvents as $event) {
+                if (!$event->book) continue;
+                $key = $event->user_id . '_' . $event->book_id;
+                
+                if (!isset($merged[$key])) {
+                    $merged[$key] = $event;
+                } else {
+                    $existing = $merged[$key];
+                    // Combine metadata from both events
+                    $combinedMeta = array_merge($existing->metadata ?? [], $event->metadata ?? []);
+                    
+                    // Keep the latest event as the primary (it's already sorted desc)
+                    // The first one we saw is the latest, so merge the older one's data into it
+                    $existingMeta = $existing->metadata ?? [];
+                    $eventMeta = $event->metadata ?? [];
+                    $existing->metadata = array_merge($eventMeta, $existingMeta);
+                    $merged[$key] = $existing;
+                }
+            }
+            
+            // Paginate manually
+            $page = request()->get('page', 1);
+            $perPage = 15;
+            $mergedCollection = collect(array_values($merged));
+            $activityEvents = new \Illuminate\Pagination\LengthAwarePaginator(
+                $mergedCollection->forPage($page, $perPage),
+                $mergedCollection->count(),
+                $perPage,
+                $page,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
                 
             $recommendations = \Illuminate\Support\Facades\DB::table('recommendations')
                 ->join('books', 'recommendations.book_id', '=', 'books.id')

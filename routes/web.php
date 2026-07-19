@@ -50,7 +50,7 @@ Route::middleware(['auth', 'active_user'])->group(function () {
     Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('users.follow');
     Route::delete('/users/{user}/unfollow', [FollowController::class, 'destroy'])->name('users.unfollow');
 
-    Route::post('/reports', [\App\Http\Controllers\ReportController::class, 'store'])->name('reports.store');
+
     Route::get('/recommendations', [\App\Http\Controllers\RecommendationController::class, 'index'])->name('recommendations.index');
 });
 
@@ -76,9 +76,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::resource('users', AdminUserController::class);
     
-    Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
-    Route::put('reports/{report}/resolve', [\App\Http\Controllers\Admin\ReportController::class, 'resolve'])->name('reports.resolve');
-    Route::put('reports/{report}/dismiss', [\App\Http\Controllers\Admin\ReportController::class, 'dismiss'])->name('reports.dismiss');
+
 });
 
 require __DIR__.'/auth.php';

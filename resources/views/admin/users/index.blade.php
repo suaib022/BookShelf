@@ -46,7 +46,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 @if($user->avatar_url)
-                                    <img src="{{ Storage::url($user->avatar_url) }}" class="w-8 h-8 rounded-full object-cover">
+                                    <img src="{{ filter_var($user->avatar_url, FILTER_VALIDATE_URL) ? $user->avatar_url : Storage::url($user->avatar_url) }}" class="w-8 h-8 rounded-full object-cover">
                                 @else
                                     <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xs">
                                         {{ substr($user->username, 0, 1) }}

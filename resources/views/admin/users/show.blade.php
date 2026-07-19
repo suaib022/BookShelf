@@ -16,7 +16,7 @@
             <div class="flex flex-col items-center text-center mb-6">
                 <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#DDD8CC] mb-4">
                     @if($user->avatar_url)
-                        <img src="{{ Storage::url($user->avatar_url) }}" alt="{{ $user->username }}" class="w-full h-full object-cover" />
+                        <img src="{{ filter_var($user->avatar_url, FILTER_VALIDATE_URL) ? $user->avatar_url : Storage::url($user->avatar_url) }}" alt="{{ $user->username }}" class="w-full h-full object-cover" />
                     @else
                         <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-2xl">
                             {{ substr($user->username, 0, 1) }}
