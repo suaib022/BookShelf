@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[1000px] mx-auto px-6 py-8">
+<div class="max-w-[1200px] mx-auto px-6 py-8">
     <div class="mb-8 border-b border-[#DDD8CC] pb-4">
         <h1 class="text-3xl font-bold text-[#382110]">Recommended for You</h1>
         <p class="text-[#555] mt-2">Books we think you'll love, based on what you've rated highly.</p>
@@ -16,15 +16,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($recommendations as $rec)
                 @php $book = $books[$rec->id]; @endphp
-                <div class="bg-white border border-[#DDD8CC] rounded-md flex flex-col hover:shadow-md transition-shadow">
-                    <div class="p-4 flex gap-4">
+                <div class="bg-white border border-[#DDD8CC] rounded-md flex flex-col hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="p-5 flex gap-4">
                         <a href="{{ route('books.show', $book) }}" class="shrink-0">
-                            <img src="{{ $book->cover_url ? (filter_var($book->cover_url, FILTER_VALIDATE_URL) ? $book->cover_url : Storage::url($book->cover_url)) : 'https://placehold.co/80x120?text=No+Cover' }}" alt="{{ $book->title }}" class="w-20 h-32 object-cover rounded shadow-sm">
+                            <img src="{{ $book->cover_url ? (filter_var($book->cover_url, FILTER_VALIDATE_URL) ? $book->cover_url : Storage::url($book->cover_url)) : 'https://placehold.co/80x120?text=No+Cover' }}" alt="{{ $book->title }}" class="w-[84px] h-[126px] object-cover rounded shadow-md">
                         </a>
-                        <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
                             <div>
-                                <a href="{{ route('books.show', $book) }}" class="font-bold text-[#382110] hover:text-[#00635D] text-lg leading-tight line-clamp-2">{{ $book->title }}</a>
-                                <p class="text-sm text-[#555] mt-1">by {{ $book->authors->first()->name ?? 'Unknown' }}</p>
+                                <a href="{{ route('books.show', $book) }}" class="font-bold text-[#382110] hover:text-[#00635D] text-[17px] leading-snug line-clamp-2 mb-1">{{ $book->title }}</a>
+                                <p class="text-[13px] text-[#666]">by {{ $book->authors->first()->name ?? 'Unknown' }}</p>
                                 
                                 <div class="flex items-center gap-1 mt-2">
                                     <span class="text-sm font-bold text-[#333]">{{ number_format($book->avg_rating, 2) }}</span>

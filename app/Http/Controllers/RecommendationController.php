@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Book;
+use App\Services\RecommendationService;
 
 class RecommendationController extends Controller
 {
-    public function index()
+    public function index(RecommendationService $recommendationService)
     {
+        $recommendationService->generateForUser(auth()->user());
+
         $recommendations = DB::table('recommendations')
             ->join('books', 'recommendations.book_id', '=', 'books.id')
             ->where('recommendations.user_id', auth()->id())
